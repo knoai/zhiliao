@@ -1,0 +1,314 @@
+/* ============================================
+   知了云笔记 · 文档编辑器专属样式
+   对标语雀文档编辑/阅读体验
+   ============================================ */
+
+/* ---------- 纸张效果 ---------- */
+.doc-paper {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  min-height: calc(100vh - 120px);
+}
+
+@media (max-width: 768px) {
+  .doc-paper {
+    border-radius: 0;
+    box-shadow: none;
+    min-height: auto;
+  }
+}
+
+/* ---------- 侧边栏过渡动画 ---------- */
+.doc-sidebar {
+  transition: width 300ms ease, opacity 300ms ease;
+}
+
+.doc-sidebar-collapsed {
+  width: 0 !important;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* ---------- 阅读模式过渡 ---------- */
+.read-mode-transition {
+  transition: opacity 200ms ease;
+}
+
+/* ---------- 大纲高亮过渡 ---------- */
+.outline-item {
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+/* ---------- Slate 编辑器中文排版优化 ---------- */
+.slate-editor {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #1f2937;
+}
+
+.slate-editor p {
+  margin-bottom: 1em;
+}
+
+.slate-editor h1 {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.5em;
+  margin-bottom: 0.8em;
+  color: #111827;
+}
+
+.slate-editor h2 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.2em;
+  margin-bottom: 0.6em;
+  color: #111827;
+}
+
+.slate-editor h3 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  color: #111827;
+}
+
+.slate-editor h4 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 0.8em;
+  margin-bottom: 0.4em;
+  color: #111827;
+}
+
+.slate-editor ul,
+.slate-editor ol {
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
+.slate-editor li {
+  margin-bottom: 0.5em;
+}
+
+.slate-editor blockquote {
+  border-left: 4px solid #3b82f6;
+  background-color: #f8fafc;
+  padding: 12px 16px;
+  margin: 1em 0;
+  border-radius: 0 6px 6px 0;
+  color: #475569;
+  font-style: normal;
+}
+
+.slate-editor pre {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  line-height: 1.6;
+}
+
+.slate-editor code {
+  background: #f3f4f6;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.slate-editor pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.slate-editor hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 1.5em 0;
+}
+
+.slate-editor a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.slate-editor a:hover {
+  text-decoration: underline;
+}
+
+.slate-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.slate-editor table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+.slate-editor td {
+  padding: 0.5em 0.75em;
+  border: 1px solid #d1d5db;
+  min-width: 100px;
+}
+
+/* ---------- 阅读模式 Slate 样式 ---------- */
+.slate-renderer {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #1f2937;
+}
+
+.slate-renderer p {
+  margin-bottom: 1em;
+}
+
+.slate-renderer h1 {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.5em;
+  margin-bottom: 0.8em;
+  color: #111827;
+}
+
+.slate-renderer h2 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.2em;
+  margin-bottom: 0.6em;
+  color: #111827;
+}
+
+.slate-renderer h3 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  color: #111827;
+}
+
+.slate-renderer h4 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 0.8em;
+  margin-bottom: 0.4em;
+  color: #111827;
+}
+
+.slate-renderer ul,
+.slate-renderer ol {
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
+.slate-renderer li {
+  margin-bottom: 0.5em;
+}
+
+.slate-renderer blockquote {
+  border-left: 4px solid #3b82f6;
+  background-color: #f8fafc;
+  padding: 12px 16px;
+  margin: 1em 0;
+  border-radius: 0 6px 6px 0;
+  color: #475569;
+  font-style: normal;
+}
+
+.slate-renderer pre {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  line-height: 1.6;
+}
+
+.slate-renderer code {
+  background: #f3f4f6;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.slate-renderer pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.slate-renderer hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 1.5em 0;
+}
+
+.slate-renderer strong {
+  font-weight: 700;
+  color: #111827;
+}
+
+.slate-renderer a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.slate-renderer a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 文档标题样式 ---------- */
+.doc-title-input {
+  width: 100%;
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #111827;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+.doc-title-input::placeholder {
+  color: #d1d5db;
+}
+
+.doc-title-static {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #111827;
+  margin: 0;
+}
+
+/* ---------- 工具栏按钮激活态 ---------- */
+.toolbar-btn-active {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+/* ---------- 占位符 ---------- */
+.slate-placeholder {
+  color: #9ca3af;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  opacity: 0.6;
+}
+
+/* ---------- 滚动容器优化 ---------- */
+.editor-scroll-container {
+  scroll-behavior: smooth;
+}
