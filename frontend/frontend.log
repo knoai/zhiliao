@@ -1,0 +1,23 @@
+
+> zhiliao-react@1.0.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 931 ms
+
+  ➜  Local:   http://localhost:5174/
+  ➜  Network: use --host to expose
+2:25:52 PM [vite] hmr update /src/App.tsx, /src/styles/index.css
+2:26:10 PM [vite] hmr update /src/App.tsx, /src/styles/index.css
+2:27:23 PM [vite] hmr update /src/components/layout/MainLayout.tsx, /src/styles/index.css
+2:27:26 PM [vite] hmr update /src/components/layout/MainLayout.tsx, /src/styles/index.css
+2:27:27 PM [vite] hmr update /src/components/layout/MainLayout.tsx, /src/styles/index.css
+2:34:28 PM [vite] hmr update /src/pages/BookEdit.tsx, /src/styles/index.css
+2:34:29 PM [vite] hmr update /src/pages/BookEdit.tsx, /src/styles/index.css
+2:35:03 PM [vite] hmr update /src/pages/BookEdit.tsx, /src/styles/index.css
+2:35:36 PM [vite] hmr update /src/components/editor/SlateEditor.tsx, /src/styles/index.css
+2:38:09 PM [vite] hmr update /src/components/editor/SlateEditor.tsx, /src/styles/index.css
+2:40:28 PM [vite] hmr update /src/pages/DocEdit.tsx, /src/styles/index.css
+2:45:53 PM [vite] hmr update /src/pages/DocEdit.tsx, /src/styles/index.css
+2:48:54 PM [vite] hmr update /src/components/editor/SlateEditor.tsx, /src/styles/index.css
+2:48:54 PM [vite] hmr update /src/components/editor/SlateEditor.tsx, /src/styles/index.css
