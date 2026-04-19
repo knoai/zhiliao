@@ -1,0 +1,298 @@
+@import './doc-editor.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
+               'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  font-size: 14px;
+  color: #1f2937;
+  background: #f3f4f6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100vh;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Slate Editor Styles */
+.slate-editor {
+  line-height: 1.8;
+  font-size: 16px;
+}
+
+.slate-editor p {
+  margin: 0.75em 0;
+}
+
+.slate-editor h1 {
+  font-size: 2em;
+  font-weight: 700;
+  margin: 0.67em 0;
+  line-height: 1.3;
+}
+
+.slate-editor h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 0.75em 0;
+  line-height: 1.35;
+}
+
+.slate-editor h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 0.83em 0;
+  line-height: 1.4;
+}
+
+.slate-editor h4 {
+  font-weight: 600;
+  margin: 1em 0;
+}
+
+.slate-editor ul,
+.slate-editor ol {
+  padding-left: 1.5em;
+  margin: 0.75em 0;
+}
+
+.slate-editor li {
+  margin: 0.25em 0;
+}
+
+.slate-editor blockquote {
+  border-left: 4px solid #3b82f6;
+  padding-left: 1em;
+  margin: 1em 0;
+  color: #4b5563;
+  font-style: italic;
+}
+
+.slate-editor pre {
+  background: #1f2937;
+  color: #e5e7eb;
+  padding: 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1em 0;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  line-height: 1.6;
+}
+
+.slate-editor code {
+  background: #f3f4f6;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.slate-editor pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.slate-editor hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 1.5em 0;
+}
+
+.slate-editor a {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.slate-editor a:hover {
+  text-decoration: underline;
+}
+
+.slate-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+/* Slate Renderer (Read Mode) */
+.slate-renderer {
+  line-height: 1.8;
+  font-size: 16px;
+  color: #1f2937;
+}
+
+.slate-renderer h1 {
+  font-size: 2em;
+  font-weight: 700;
+  margin: 0.67em 0;
+  line-height: 1.3;
+  color: #111827;
+}
+
+.slate-renderer h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 0.75em 0;
+  line-height: 1.35;
+  color: #111827;
+}
+
+.slate-renderer h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 0.83em 0;
+  line-height: 1.4;
+  color: #111827;
+}
+
+.slate-renderer h4 {
+  font-weight: 600;
+  margin: 1em 0;
+  color: #111827;
+}
+
+.slate-renderer p {
+  margin: 0.75em 0;
+}
+
+.slate-renderer ul,
+.slate-renderer ol {
+  padding-left: 1.5em;
+  margin: 0.75em 0;
+}
+
+.slate-renderer li {
+  margin: 0.25em 0;
+}
+
+.slate-renderer blockquote {
+  border-left: 4px solid #3b82f6;
+  padding-left: 1em;
+  margin: 1em 0;
+  color: #4b5563;
+  font-style: italic;
+}
+
+.slate-renderer pre {
+  background: #1f2937;
+  color: #e5e7eb;
+  padding: 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1em 0;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  line-height: 1.6;
+}
+
+.slate-renderer code {
+  background: #f3f4f6;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.slate-renderer pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.slate-renderer hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 1.5em 0;
+}
+
+.slate-renderer strong {
+  font-weight: 700;
+  color: #111827;
+}
+
+.slate-renderer em {
+  font-style: italic;
+}
+
+.slate-renderer u {
+  text-decoration: underline;
+}
+
+.slate-renderer del {
+  text-decoration: line-through;
+}
+
+/* Table Styles */
+.slate-renderer table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+.slate-renderer th,
+.slate-renderer td {
+  padding: 0.75em 1em;
+  border: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.slate-renderer th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+.slate-renderer tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+/* Slate Editor Table Styles */
+.slate-editor table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+.slate-editor td {
+  padding: 0.5em 0.75em;
+  border: 1px solid #d1d5db;
+  min-width: 100px;
+}
+
+/* Toolbar button active state */
+.toolbar-btn-active {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+/* Placeholder */
+.slate-placeholder {
+  color: #9ca3af;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  opacity: 0.6;
+}
