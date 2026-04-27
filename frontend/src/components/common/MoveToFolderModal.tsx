@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useFolderStore } from '@/stores/folderStore'
+import { useFolders } from '@/hooks/useFolders'
 import { Folder, ChevronRight, X } from 'lucide-react'
 import type { Folder as FolderType } from '@/types'
 
@@ -18,16 +18,15 @@ export const MoveToFolderModal: React.FC<MoveToFolderModalProps> = ({
   currentFolderId,
   docTitle,
 }) => {
-  const { folders, fetchFolders } = useFolderStore()
+  const { data: folders = [] } = useFolders()
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (isOpen) {
-      fetchFolders()
       setSelectedFolderId(currentFolderId || null)
     }
-  }, [isOpen, currentFolderId, fetchFolders])
+  }, [isOpen, currentFolderId])
 
   if (!isOpen) return null
 

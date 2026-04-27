@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, PanelLeft, FileText, Search } from 'lucide-react'
-import { useFolderStore } from '@/stores/folderStore'
+import { useFolders } from '@/hooks/useFolders'
 import { FolderTree } from '@/components/layout/FolderTree'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { DocListItem } from '@/types'
@@ -22,13 +22,8 @@ export const DocSidebar: React.FC<DocSidebarProps> = ({
   onCreateDoc,
 }) => {
   const navigate = useNavigate()
-  const { folders, fetchFolders } = useFolderStore()
+  const { data: folders = [] } = useFolders()
   const [searchKeyword, setSearchKeyword] = useState('')
-
-  // 确保文件夹数据已加载
-  React.useEffect(() => {
-    fetchFolders()
-  }, [fetchFolders])
 
   const filteredDocs = useMemo(() => {
     if (!searchKeyword.trim()) return docs
