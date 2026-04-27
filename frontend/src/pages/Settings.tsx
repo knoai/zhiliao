@@ -73,22 +73,7 @@ export const SettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200">
-        <div className="max-w-3xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/workspace')}
-              className="p-2 hover:bg-slate-100 rounded-lg text-slate-600"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-xl font-bold text-slate-900">账号设置</h1>
-          </div>
-        </div>
-      </header>
-
+    <div className="h-full overflow-y-auto bg-slate-50">
       {/* Content */}
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
         {/* 用户信息卡片 */}

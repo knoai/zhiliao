@@ -25,6 +25,12 @@ const DEFAULT_CONTENT: Descendant[] = [
   },
 ]
 
+interface DocDraft {
+  title: string
+  content: Descendant[]
+  savedAt: string
+}
+
 export const DocEditPage: React.FC = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
@@ -41,7 +47,9 @@ export const DocEditPage: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [importing, setImporting] = useState(false)
 
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const titleSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const contentSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const draftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isNewDoc = !id
 
   // Load document and docs list
@@ -51,12 +59,29 @@ export const DocEditPage: React.FC = () => {
     if (id) {
       fetchDoc(id).then((doc) => {
         if (doc) {
-          setTitle(doc.title || '无标题文档')
-          const docContent = doc.content
-          if (Array.isArray(docContent) && docContent.length > 0) {
-            setContent(docContent as Descendant[])
+          // 尝试恢复本地草稿
+          const draftRaw = localStorage.getItem(`doc-draft-${id}`)
+          if (draftRaw) {
+            try {
+              const draft: DocDraft = JSON.parse(draftRaw)
+              setTitle(draft.title || doc.title || '无标题文档')
+              const draftContent = draft.content
+              if (Array.isArray(draftContent) && draftContent.length > 0) {
+                setContent(draftContent as Descendant[])
+              } else {
+                const docContent = doc.content
+                setContent(Array.isArray(docContent) && docContent.length > 0 ? docContent as Descendant[] : DEFAULT_CONTENT)
+              }
+            } catch {
+              // 草稿解析失败，回退到服务器数据
+              setTitle(doc.title || '无标题文档')
+              const docContent = doc.content
+              setContent(Array.isArray(docContent) && docContent.length > 0 ? docContent as Descendant[] : DEFAULT_CONTENT)
+            }
           } else {
-            setContent(DEFAULT_CONTENT)
+            setTitle(doc.title || '无标题文档')
+            const docContent = doc.content
+            setContent(Array.isArray(docContent) && docContent.length > 0 ? docContent as Descendant[] : DEFAULT_CONTENT)
           }
           setStatus(doc.status || 'draft')
           setLastSaved(new Date(doc.updated_at))
@@ -69,7 +94,16 @@ export const DocEditPage: React.FC = () => {
     }
   }, [id])
 
-  // Auto save
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (titleSaveTimeoutRef.current) clearTimeout(titleSaveTimeoutRef.current)
+      if (contentSaveTimeoutRef.current) clearTimeout(contentSaveTimeoutRef.current)
+      if (draftTimeoutRef.current) clearTimeout(draftTimeoutRef.current)
+    }
+  }, [])
+
+  // === 自动保存核心逻辑 ===
   const saveDoc = useCallback(async () => {
     if (!id) return
 
@@ -86,32 +120,54 @@ export const DocEditPage: React.FC = () => {
       await updateDoc(id, { title, content: cleanContent })
       setLastSaved(new Date())
       setSaveStatus('saved')
+      // 保存成功后清除本地草稿
+      localStorage.removeItem(`doc-draft-${id}`)
     } catch (error) {
       console.error('保存失败:', error)
       setSaveStatus('error')
     }
   }, [id, title, content, updateDoc])
 
+  const saveDraft = useCallback(() => {
+    if (!id) return
+    const draft: DocDraft = { title, content, savedAt: new Date().toISOString() }
+    localStorage.setItem(`doc-draft-${id}`, JSON.stringify(draft))
+  }, [id, title, content])
+
   const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle)
 
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current)
+    if (titleSaveTimeoutRef.current) {
+      clearTimeout(titleSaveTimeoutRef.current)
     }
-    saveTimeoutRef.current = setTimeout(() => {
+    titleSaveTimeoutRef.current = setTimeout(() => {
       saveDoc()
+    }, 1000)
+
+    if (draftTimeoutRef.current) {
+      clearTimeout(draftTimeoutRef.current)
+    }
+    draftTimeoutRef.current = setTimeout(() => {
+      saveDraft()
     }, 1000)
   }
 
   const handleContentChange = (newContent: Descendant[]) => {
     setContent(newContent)
 
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current)
+    if (contentSaveTimeoutRef.current) {
+      clearTimeout(contentSaveTimeoutRef.current)
     }
-    saveTimeoutRef.current = setTimeout(() => {
+    contentSaveTimeoutRef.current = setTimeout(() => {
       saveDoc()
     }, 2000)
+
+    if (draftTimeoutRef.current) {
+      clearTimeout(draftTimeoutRef.current)
+    }
+    draftTimeoutRef.current = setTimeout(() => {
+      saveDraft()
+    }, 1000)
   }
 
   // 手动保存快捷键 ⌘+S / Ctrl+S
@@ -170,6 +226,7 @@ export const DocEditPage: React.FC = () => {
       await updateDoc(id, { title: importTitle, content: importContent })
       setLastSaved(new Date())
       setSaveStatus('saved')
+      localStorage.removeItem(`doc-draft-${id}`)
     } catch (err: any) {
       alert(err.message || '导入失败')
     } finally {

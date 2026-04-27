@@ -101,10 +101,12 @@ function App() {
         path="/settings"
         element={
           <ProtectedRoute>
-            <SettingsPage />
+            <MainLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<SettingsPage />} />
+      </Route>
 
       {/* 默认重定向 */}
       <Route path="*" element={<Navigate to="/" replace />} />

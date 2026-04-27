@@ -18,8 +18,7 @@ export const DocListPage: React.FC = () => {
   const { docs, isLoading, fetchDocs, deleteDoc, updateDoc, createDoc } = useDocStore()
   const { folders, fetchFolders, createFolder, deleteFolder } = useFolderStore()
   const [searchKeyword, setSearchKeyword] = useState('')
-  const [draggedId, setDraggedId] = useState<string | null>(null)
-  
+
   // Move modal state
   const [moveModalOpen, setMoveModalOpen] = useState(false)
   const [movingDoc, setMovingDoc] = useState<{ id: string; title: string; folder_id?: string } | null>(null)
@@ -93,34 +92,6 @@ export const DocListPage: React.FC = () => {
     if (confirm('确定要删除此文件夹吗？其中的文档将被移动到根目录。')) {
       await deleteFolder(id)
     }
-  }
-
-  // Drag and drop handlers
-  const handleDragStart = (id: string) => {
-    setDraggedId(id)
-  }
-
-  const handleDragOver = (e: React.DragEvent, targetId: string) => {
-    e.preventDefault()
-    if (draggedId === targetId) return
-
-    // Reorder visually
-    const draggedIndex = filteredDocs.findIndex((d) => d.id === draggedId)
-    const targetIndex = filteredDocs.findIndex((d) => d.id === targetId)
-
-    if (draggedIndex === -1 || targetIndex === -1) return
-
-    // Update sort order
-    const newSortOrder = targetIndex === 0 ? 0 : filteredDocs[targetIndex].sort_order
-    if (draggedId) {
-      // updateDocSort(draggedId, newSortOrder, folderId || undefined)
-    }
-  }
-
-  const handleDrop = () => {
-    setDraggedId(null)
-    // Refresh list
-    fetchDocs(folderId || undefined, statusFilter || undefined)
   }
 
   // Get current folder name for breadcrumb

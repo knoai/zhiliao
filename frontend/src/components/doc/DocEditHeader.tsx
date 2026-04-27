@@ -108,9 +108,9 @@ export const DocEditHeader: React.FC<DocEditHeaderProps> = ({
             </span>
           )}
           {saveStatus === 'error' && (
-            <span className="text-red-600 flex items-center gap-1">
-              保存失败
-              <button onClick={onSave} className="underline hover:text-red-700">
+            <span className="text-red-600 flex items-center gap-1 bg-red-50 px-2 py-0.5 rounded">
+              保存失败，点击重试
+              <button onClick={onSave} className="underline hover:text-red-700 font-medium">
                 重试
               </button>
             </span>

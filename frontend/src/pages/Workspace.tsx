@@ -37,21 +37,33 @@ export const WorkspacePage: React.FC = () => {
   }, [])
 
   const loadRecentData = async () => {
-    try {
-      const [docs, books, userStats] = await Promise.all([
-        docApi.getList(),
-        bookApi.getList(),
-        authApi.getStats()
-      ])
-      // 取最近更新的5个
-      setRecentDocs(docs.slice(0, 5))
-      setRecentBooks(books.slice(0, 5))
-      setStats(userStats)
-    } catch (error) {
-      console.error('加载数据失败:', error)
-    } finally {
-      setLoading(false)
+    const results = await Promise.allSettled([
+      docApi.getList(),
+      bookApi.getList(),
+      authApi.getStats()
+    ])
+
+    const [docsResult, booksResult, statsResult] = results
+
+    if (docsResult.status === 'fulfilled') {
+      const sorted = [...docsResult.value].sort(
+        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      )
+      setRecentDocs(sorted.slice(0, 5))
     }
+
+    if (booksResult.status === 'fulfilled') {
+      const sorted = [...booksResult.value].sort(
+        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      )
+      setRecentBooks(sorted.slice(0, 5))
+    }
+
+    if (statsResult.status === 'fulfilled') {
+      setStats(statsResult.value)
+    }
+
+    setLoading(false)
   }
 
   const statCards = [
