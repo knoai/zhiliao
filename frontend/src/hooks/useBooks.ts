@@ -95,3 +95,11 @@ export function useDeleteChapter() {
     },
   })
 }
+
+export function useChapter(bookId: string, chapterId?: string) {
+  return useQuery({
+    queryKey: [...booksKeys.chapters(bookId), chapterId],
+    queryFn: () => bookApi.getChapter(bookId, chapterId!),
+    enabled: !!bookId && !!chapterId,
+  })
+}

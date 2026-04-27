@@ -19,7 +19,7 @@ import {
 import { EmptyState } from '../components/ui/EmptyState'
 import { SlateEditor } from '../components/editor/SlateEditor'
 import { bookApi } from '../api/book'
-import { useBook, useUpdateBook, useBookChapters } from '../hooks/useBooks'
+import { useBook, useUpdateBook, useBookChapters, useCreateChapter, useUpdateChapter, useDeleteChapter } from '../hooks/useBooks'
 import { Descendant } from 'slate'
 import type { Book, Chapter, ChapterTree } from '../types'
 import { importFile, triggerFileSelect } from '../utils/importUtils'
@@ -116,6 +116,7 @@ interface ChapterTitleInputProps {
 const ChapterTitleInput: React.FC<ChapterTitleInputProps> = ({ chapter, bookId, onUpdate }) => {
   const [title, setTitle] = useState(chapter.title)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const updateChapter = useUpdateChapter()
 
   // 当外部 chapter 变化时，更新本地标题
   useEffect(() => {
@@ -134,8 +135,10 @@ const ChapterTitleInput: React.FC<ChapterTitleInputProps> = ({ chapter, bookId, 
     // 防抖保存
     saveTimeoutRef.current = setTimeout(async () => {
       try {
-        const updated = await bookApi.updateChapter(bookId, chapter.id, {
-          title: newTitle
+        const updated = await updateChapter.mutateAsync({
+          bookId,
+          chapterId: chapter.id,
+          data: { title: newTitle }
         })
         onUpdate(updated)
       } catch (error) {
@@ -174,6 +177,9 @@ export const BookEditPage: React.FC = () => {
   const { data: bookData, isLoading: bookLoading } = useBook(id || '')
   const { data: serverChapters = [] } = useBookChapters(id || '')
   const updateBookMut = useUpdateBook()
+  const createChapterMut = useCreateChapter()
+  const updateChapterMut = useUpdateChapter()
+  const deleteChapterMut = useDeleteChapter()
   const [chapters, setChapters] = useState<ChapterTree[]>([])
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null)
   const [content, setContent] = useState<Descendant[]>(DEFAULT_CONTENT)
@@ -301,14 +307,16 @@ export const BookEditPage: React.FC = () => {
       if (!book || !currentChapter) return
       
       try {
-        await bookApi.updateChapter(book.id, currentChapter.id, {
-          content: newContent,
+        await updateChapterMut.mutateAsync({
+          bookId: book.id,
+          chapterId: currentChapter.id,
+          data: { content: newContent },
         })
       } catch (error) {
         console.error('保存章节失败:', error)
       }
     },
-    [book, currentChapter]
+    [book, currentChapter, updateChapterMut]
   )
 
   // 内容变更
@@ -328,13 +336,10 @@ export const BookEditPage: React.FC = () => {
   const handleCreateChapter = async (parentId?: string) => {
     if (!book) return
     try {
-      const newChapter = await bookApi.createChapter(book.id, {
-        title: '新篇',
-        parent_id: parentId,
+      const newChapter = await createChapterMut.mutateAsync({
+        bookId: book.id,
+        data: { title: '新篇', parent_id: parentId },
       })
-      // 刷新章节树
-      const updatedChapters = await bookApi.getChapters(book.id)
-      setChapters(updatedChapters)
       // 选中新章节，内容重置为空
       setCurrentChapter(newChapter)
       setContent(DEFAULT_CONTENT)
@@ -348,9 +353,7 @@ export const BookEditPage: React.FC = () => {
     if (!book) return
     if (!confirm('确定要删除这个章节吗？')) return
     try {
-      await bookApi.deleteChapter(book.id, chapterId)
-      const updatedChapters = await bookApi.getChapters(book.id)
-      setChapters(updatedChapters)
+      await deleteChapterMut.mutateAsync({ bookId: book.id, chapterId })
       if (currentChapter?.id === chapterId) {
         setCurrentChapter(null)
         setContent(DEFAULT_CONTENT)
@@ -591,10 +594,6 @@ export const BookEditPage: React.FC = () => {
                     bookId={book!.id}
                     onUpdate={(updated) => {
                       setCurrentChapter(updated)
-                      // 刷新章节列表
-                      if (book) {
-                        bookApi.getChapters(book.id).then(setChapters)
-                      }
                     }}
                   />
                 </div>
