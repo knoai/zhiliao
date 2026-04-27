@@ -14,7 +14,8 @@ import {
   Palette,
   Upload,
   Menu,
-  X
+  X,
+  Folder
 } from 'lucide-react'
 import { EmptyState } from '../components/ui/EmptyState'
 import { SlateEditor } from '../components/editor/SlateEditor'
@@ -23,7 +24,7 @@ import { useBook, useUpdateBook, useBookChapters, useCreateChapter, useUpdateCha
 import { useToast } from '../components/ui/Toast'
 import { Descendant } from 'slate'
 import type { Book, Chapter, ChapterTree } from '../types'
-import { importFile, triggerFileSelect } from '../utils/importUtils'
+import { importFile, triggerFileSelect, triggerFolderSelect, importFolder, countFiles, type ImportFolderNode } from '../utils/importUtils'
 
 const DEFAULT_CONTENT: Descendant[] = [
   {
@@ -366,6 +367,58 @@ export const BookEditPage: React.FC = () => {
     setShowChapterMenu(null)
   }
 
+  // 导入文件夹为章节树
+  const handleImportFolder = async () => {
+    if (!book) return
+    triggerFolderSelect(async (files) => {
+      setImporting(true)
+      try {
+        show(`正在解析 ${files.length} 个文件...`, 'info')
+        const tree = await importFolder(files)
+        const total = countFiles(tree)
+        if (total === 0) {
+          show('未找到支持的文件（.md / .txt）', 'error')
+          return
+        }
+        show(`开始导入 ${total} 个章节，保持层级结构...`, 'info')
+
+        let imported = 0
+        const importNode = async (node: ImportFolderNode, parentChapterId?: string) => {
+          if (node.type === 'file') {
+            await bookApi.createChapter(book.id, {
+              title: node.name,
+              content: node.content,
+              parent_id: parentChapterId,
+            })
+            imported++
+            return
+          }
+          let currentChapterId = parentChapterId
+          if (node.name) {
+            const chapter = await bookApi.createChapter(book.id, {
+              title: node.name,
+              parent_id: parentChapterId,
+            })
+            currentChapterId = chapter.id
+          }
+          for (const child of node.children) {
+            await importNode(child, currentChapterId)
+          }
+        }
+
+        await importNode(tree)
+        // 刷新章节树
+        const updatedChapters = await bookApi.getChapters(book.id)
+        setChapters(updatedChapters)
+        show(`成功导入 ${imported} 个章节`, 'success')
+      } catch (err: any) {
+        show(err.message || '导入失败', 'error')
+      } finally {
+        setImporting(false)
+      }
+    })
+  }
+
   // 切换展开
   const handleToggle = (chapterId: string) => {
     setExpandedIds((prev) => {
@@ -509,6 +562,14 @@ export const BookEditPage: React.FC = () => {
                 title="导入章节"
               >
                 <Upload className={`w-4 h-4 text-slate-500 ${importing ? 'animate-spin' : ''}`} />
+              </button>
+              <button
+                disabled={importing}
+                onClick={() => handleImportFolder()}
+                className="p-1 hover:bg-slate-200 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                title="导入文件夹作为章节树"
+              >
+                <Folder className={`w-4 h-4 text-slate-500 ${importing ? 'animate-spin' : ''}`} />
               </button>
               <button
                 onClick={() => handleCreateChapter()}

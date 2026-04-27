@@ -2,12 +2,14 @@ import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useDocs, useDeleteDoc, useCreateDoc, useUpdateDoc } from '../hooks/useDocs'
 import { useFolders, useCreateFolder, useDeleteFolder } from '../hooks/useFolders'
+import { folderApi } from '../api/folder'
+import { docApi } from '../api/doc'
 import { MoveToFolderModal } from '../components/common/MoveToFolderModal'
 import { FolderTree } from '../components/layout/FolderTree'
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { FileText, Search, Trash2, Folder, Tag, CheckCircle2, RotateCcw, Move, Plus, ChevronRight, FileEdit, Upload } from 'lucide-react'
-import { importFile, triggerFileSelect } from '../utils/importUtils'
+import { importFile, triggerFileSelect, triggerFolderSelect, importFolder, countFiles, type ImportFolderNode } from '../utils/importUtils'
 import { useToast } from '../components/ui/Toast'
 import { EmptyState } from '../components/ui/EmptyState'
 import { SkeletonList } from '../components/ui/Skeleton'
@@ -80,6 +82,51 @@ export const DocListPage: React.FC = () => {
     setNewFolderName('')
     setParentFolderId(undefined)
     setShowCreateFolder(false)
+  }
+
+  /** 导入文件夹：保持层级结构创建文件夹和文档 */
+  const handleImportFolder = async () => {
+    triggerFolderSelect(async (files) => {
+      setImporting(true)
+      try {
+        show(`正在解析 ${files.length} 个文件...`, 'info')
+        const tree = await importFolder(files)
+        const total = countFiles(tree)
+        if (total === 0) {
+          show('未找到支持的文件（.md / .txt）', 'error')
+          return
+        }
+        show(`开始导入 ${total} 个文档，保持层级结构...`, 'info')
+
+        let imported = 0
+        const importNode = async (node: ImportFolderNode, parentFolderId?: string) => {
+          if (node.type === 'file') {
+            await docApi.create({
+              folder_id: parentFolderId,
+              title: node.name,
+              content: node.content,
+            })
+            imported++
+            return
+          }
+          let currentFolderId = parentFolderId
+          if (node.name) {
+            const folder = await folderApi.create({ name: node.name, parent_id: parentFolderId })
+            currentFolderId = folder.id
+          }
+          for (const child of node.children) {
+            await importNode(child, currentFolderId)
+          }
+        }
+
+        await importNode(tree, folderId || undefined)
+        show(`成功导入 ${imported} 个文档`, 'success')
+      } catch (err: any) {
+        show(err.message || '导入失败', 'error')
+      } finally {
+        setImporting(false)
+      }
+    })
   }
 
   const handleCreateSubFolder = (parentId: string) => {
@@ -224,6 +271,16 @@ export const DocListPage: React.FC = () => {
               >
                 <Upload className={`w-4 h-4 ${importing ? 'animate-spin' : ''}`} />
                 {importing ? '导入中...' : '导入'}
+              </button>
+              {/* Import Folder Button */}
+              <button
+                disabled={importing}
+                onClick={() => handleImportFolder()}
+                className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="导入整个文件夹，保持层级结构"
+              >
+                <Folder className={`w-4 h-4 ${importing ? 'animate-spin' : ''}`} />
+                {importing ? '导入中...' : '导入文件夹'}
               </button>
               {/* New Doc Button */}
               <button
