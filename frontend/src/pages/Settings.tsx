@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { feishuApi, type FeishuBindingStatus } from '../api/feishu'
 import { ArrowLeft, Loader2, Link2, Unlink, User } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 import { useToast } from '../components/ui/Toast'
+import { useFeishuBinding, useFeishuCallback, useFeishuUnbind } from '../hooks/useFeishu'
+import { feishuApi } from '../api/feishu'
 
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate()
@@ -11,8 +12,9 @@ export const SettingsPage: React.FC = () => {
   const { user } = useAuthStore()
   const { show } = useToast()
 
-  const [binding, setBinding] = useState<FeishuBindingStatus | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { data: binding, isLoading: loading } = useFeishuBinding()
+  const feishuCallback = useFeishuCallback()
+  const feishuUnbind = useFeishuUnbind()
   const [actionLoading, setActionLoading] = useState(false)
 
   // 处理飞书回调 code
@@ -20,37 +22,20 @@ export const SettingsPage: React.FC = () => {
     const code = searchParams.get('code')
     if (code) {
       setActionLoading(true)
-      feishuApi
-        .callback(code)
+      feishuCallback
+        .mutateAsync(code)
         .then((res) => {
           show(res.message, 'success')
-          loadBinding()
         })
         .catch((err) => {
           show(err?.response?.data?.detail || '绑定失败', 'error')
         })
         .finally(() => {
           setActionLoading(false)
-          // 清除 URL 中的 code
           setSearchParams({}, { replace: true })
         })
     }
   }, [searchParams])
-
-  const loadBinding = async () => {
-    try {
-      const data = await feishuApi.getBinding()
-      setBinding(data)
-    } catch (err) {
-      console.error('加载绑定状态失败', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadBinding()
-  }, [])
 
   const handleBind = async () => {
     try {
@@ -65,8 +50,7 @@ export const SettingsPage: React.FC = () => {
     if (!confirm('确定要解除飞书账号绑定吗？')) return
     setActionLoading(true)
     try {
-      await feishuApi.unbind()
-      await loadBinding()
+      await feishuUnbind.mutateAsync()
     } catch (err: any) {
       show(err?.response?.data?.detail || '解绑失败', 'error')
     } finally {

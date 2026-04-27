@@ -22,13 +22,7 @@ import { docApi } from '../api/doc'
 import { useDoc, useDocs, useCreateDoc, useUpdateDoc, useDeleteDoc } from '../hooks/useDocs'
 import type { DocVersion } from '../types'
 import { importFile } from '../utils/importUtils'
-
-const DEFAULT_CONTENT: Descendant[] = [
-  {
-    type: 'paragraph',
-    children: [{ text: '' }],
-  },
-]
+import { DEFAULT_CONTENT } from '../constants/editor'
 
 interface DocDraft {
   title: string

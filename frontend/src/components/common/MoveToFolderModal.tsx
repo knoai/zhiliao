@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useFolders } from '@/hooks/useFolders'
+import { buildTree } from '@/utils/tree'
 import { Folder, ChevronRight, X } from 'lucide-react'
 import type { Folder as FolderType } from '@/types'
 
@@ -30,30 +31,7 @@ export const MoveToFolderModal: React.FC<MoveToFolderModalProps> = ({
 
   if (!isOpen) return null
 
-  // 构建树形结构
-  const buildTree = (flatList: FolderType[]): FolderType[] => {
-    const map = new Map<string, FolderType & { children?: FolderType[] }>()
-    const roots: (FolderType & { children?: FolderType[] })[] = []
-
-    flatList.forEach((folder) => {
-      map.set(folder.id, { ...folder, children: [] })
-    })
-
-    flatList.forEach((folder) => {
-      const node = map.get(folder.id)!
-      if (folder.parent_id && map.has(folder.parent_id)) {
-        const parent = map.get(folder.parent_id)!
-        parent.children = parent.children || []
-        parent.children.push(node)
-      } else {
-        roots.push(node)
-      }
-    })
-
-    return roots
-  }
-
-  const tree = buildTree(folders)
+  const tree = buildTree(folders) as (FolderType & { children: FolderType[] })[]
 
   const toggleExpand = (folderId: string) => {
     const newExpanded = new Set(expandedFolders)

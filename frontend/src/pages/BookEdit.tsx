@@ -25,13 +25,7 @@ import { useToast } from '../components/ui/Toast'
 import { Descendant } from 'slate'
 import type { Book, Chapter, ChapterTree } from '../types'
 import { importFile, triggerFileSelect, triggerFolderSelect, importFolder, countFiles, type ImportFolderNode } from '../utils/importUtils'
-
-const DEFAULT_CONTENT: Descendant[] = [
-  {
-    type: 'paragraph',
-    children: [{ text: '' }],
-  },
-]
+import { DEFAULT_CONTENT } from '../constants/editor'
 
 interface ChapterItemProps {
   chapter: ChapterTree
@@ -196,6 +190,7 @@ export const BookEditPage: React.FC = () => {
   const [titleVisible, setTitleVisible] = useState(true)
   const [toolbarVisible, setToolbarVisible] = useState(true)
   const [showMobileSidebar, setShowMobileSidebar] = useState(false)
+  const contentSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const book = bookData || null
 
@@ -304,13 +299,15 @@ export const BookEditPage: React.FC = () => {
     }
   }
 
-  // 保存章节内容
+  // 保存章节内容（使用 ref 避免依赖变化导致重新创建）
+  const updateChapterRef = useRef(updateChapterMut)
+  useEffect(() => { updateChapterRef.current = updateChapterMut }, [updateChapterMut])
+
   const handleSaveChapter = useCallback(
     async (newContent: Descendant[]) => {
       if (!book || !currentChapter) return
-      
       try {
-        await updateChapterMut.mutateAsync({
+        await updateChapterRef.current.mutateAsync({
           bookId: book.id,
           chapterId: currentChapter.id,
           data: { content: newContent },
@@ -319,21 +316,31 @@ export const BookEditPage: React.FC = () => {
         console.error('保存章节失败:', error)
       }
     },
-    [book, currentChapter, updateChapterMut]
+    [book, currentChapter]
   )
 
-  // 内容变更
+  // 内容变更（防抖保存，使用 ref 管理 timeout 避免泄漏）
   const handleContentChange = useCallback(
     (newContent: Descendant[]) => {
       setContent(newContent)
-      // 防抖保存
-      const timeout = setTimeout(() => {
+      if (contentSaveTimeoutRef.current) {
+        clearTimeout(contentSaveTimeoutRef.current)
+      }
+      contentSaveTimeoutRef.current = setTimeout(() => {
         handleSaveChapter(newContent)
       }, 2000)
-      return () => clearTimeout(timeout)
     },
     [handleSaveChapter]
   )
+
+  // 卸载时清除定时器
+  useEffect(() => {
+    return () => {
+      if (contentSaveTimeoutRef.current) {
+        clearTimeout(contentSaveTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // 创建章节
   const handleCreateChapter = async (parentId?: string) => {

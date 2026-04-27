@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { ChevronRight, ChevronDown, Folder as FolderIcon, FolderOpen, Plus, FileText, Trash2 } from 'lucide-react'
 import type { Folder, FolderTreeItem } from '@/types'
+import { buildTree } from '@/utils/tree'
 
 interface FolderTreeProps {
   folders: Folder[]
@@ -9,28 +10,6 @@ interface FolderTreeProps {
   onDeleteFolder: (id: string) => void
   onCreateDoc?: (folderId: string) => void
   level?: number
-}
-
-// 构建树形结构
-const buildTree = (flatList: Folder[]): FolderTreeItem[] => {
-  const map = new Map<string, FolderTreeItem>()
-  const roots: FolderTreeItem[] = []
-
-  flatList.forEach((folder) => {
-    map.set(folder.id, { ...folder, children: [] })
-  })
-
-  flatList.forEach((folder) => {
-    const node = map.get(folder.id)!
-    if (folder.parent_id && map.has(folder.parent_id)) {
-      const parent = map.get(folder.parent_id)!
-      parent.children.push(node)
-    } else {
-      roots.push(node)
-    }
-  })
-
-  return roots
 }
 
 export const FolderTree: React.FC<FolderTreeProps> = ({
