@@ -89,7 +89,7 @@ export const BookListPage: React.FC = () => {
             {filteredBooks.map((book) => (
               <div
                 key={book.id}
-                className="group bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-lg transition-all cursor-pointer"
+                className="group bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
                 onClick={() => navigate(`/books/${book.id}`)}
               >
                 {/* Cover */}

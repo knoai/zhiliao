@@ -254,7 +254,7 @@ export const DocListPage: React.FC = () => {
               {filteredDocs.map((doc) => (
                 <div
                   key={doc.id}
-                  className="group flex items-center gap-3 bg-white rounded-lg border border-gray-200 p-3 hover:shadow-md transition-all cursor-pointer"
+                  className="group flex items-center gap-3 bg-white rounded-lg border border-gray-200 p-3 hover:shadow-md hover:border-blue-300 hover:bg-blue-50/30 transition-all duration-200 cursor-pointer"
                   onClick={() => navigate(`/docs/${doc.id}`)}
                 >
                   {/* Icon */}

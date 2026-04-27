@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
-import { FileText, Loader2, Eye, EyeOff } from 'lucide-react'
+import { FileText, Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react'
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate()
@@ -57,94 +57,128 @@ export const LoginPage: React.FC = () => {
     }
   }
 
+  const toggleMode = () => {
+    setIsRegister(!isRegister)
+    setError('')
+    setFormData((prev) => ({ ...prev, password: '', confirmPassword: '' }))
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700">
-      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-            <FileText className="w-8 h-8 text-blue-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">知了云文档</h1>
-          <p className="text-gray-500 mt-1">个人版云端知识库</p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
+      {/* Background decorations */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-400/10 rounded-full blur-3xl" />
+        {/* Grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+            backgroundSize: '40px 40px',
+          }}
+        />
+      </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-600 rounded text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              邮箱
-            </label>
-            <input
-              type="email"
-              required
-              disabled={isLoading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-100"
-              placeholder="请输入邮箱"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            />
+      <div className="relative w-full max-w-md px-4">
+        <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/10 p-8 border border-white/20">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/25">
+              <FileText className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">知了云文档</h1>
+            <p className="text-gray-500 mt-1">个人版云端知识库</p>
           </div>
 
-          {isRegister && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+          {/* Error */}
+          {error && (
+            <div className="mb-5 p-3 bg-red-50 border border-red-100 rounded-xl flex items-start gap-2.5 text-sm text-red-600 animate-in fade-in slide-in-from-top-1">
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email */}
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-gray-700">
+                邮箱
+              </label>
+              <input
+                type="email"
+                required
+                disabled={isLoading}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:shadow-[0_0_0_4px_rgba(59,130,246,0.1)] outline-none disabled:bg-gray-50 transition-all bg-gray-50/50 hover:bg-white"
+                placeholder="请输入邮箱"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+
+            {/* Username (register only) */}
+            <div
+              className={`space-y-1.5 overflow-hidden transition-all duration-300 ${
+                isRegister ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0'
+              }`}
+            >
+              <label className="block text-sm font-medium text-gray-700">
                 用户名
               </label>
               <input
                 type="text"
-                required
+                required={isRegister}
                 disabled={isLoading}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-100"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:shadow-[0_0_0_4px_rgba(59,130,246,0.1)] outline-none disabled:bg-gray-50 transition-all bg-gray-50/50 hover:bg-white"
                 placeholder="请输入用户名"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               />
             </div>
-          )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              密码
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                minLength={6}
-                disabled={isLoading}
-                className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-100"
-                placeholder="请输入密码（至少6位）"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                tabIndex={-1}
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+            {/* Password */}
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-gray-700">
+                密码
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  minLength={6}
+                  disabled={isLoading}
+                  className="w-full px-4 py-2.5 pr-10 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:shadow-[0_0_0_4px_rgba(59,130,246,0.1)] outline-none disabled:bg-gray-50 transition-all bg-gray-50/50 hover:bg-white"
+                  placeholder="请输入密码（至少6位）"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-          </div>
 
-          {isRegister && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            {/* Confirm Password (register only) */}
+            <div
+              className={`space-y-1.5 overflow-hidden transition-all duration-300 ${
+                isRegister ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0'
+              }`}
+            >
+              <label className="block text-sm font-medium text-gray-700">
                 确认密码
               </label>
               <div className="relative">
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
-                  required
+                  required={isRegister}
                   minLength={6}
                   disabled={isLoading}
-                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-100"
+                  className="w-full px-4 py-2.5 pr-10 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:shadow-[0_0_0_4px_rgba(59,130,246,0.1)] outline-none disabled:bg-gray-50 transition-all bg-gray-50/50 hover:bg-white"
                   placeholder="请再次输入密码"
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
@@ -152,45 +186,45 @@ export const LoginPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors"
                   tabIndex={-1}
                 >
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                处理中...
-              </>
-            ) : (
-              isRegister ? '注册' : '登录'
-            )}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  处理中...
+                </>
+              ) : (
+                isRegister ? '注册' : '登录'
+              )}
+            </button>
+          </form>
 
-        <div className="mt-6 text-center">
-          <button
-            type="button"
-            onClick={() => {
-              setIsRegister(!isRegister)
-              setError('')
-              // 保留邮箱，清空密码和确认密码
-              setFormData((prev) => ({ ...prev, password: '', confirmPassword: '' }))
-            }}
-            className="text-blue-600 hover:text-blue-700 text-sm"
-          >
-            {isRegister ? '已有账号？去登录' : '还没有账号？去注册'}
-          </button>
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={toggleMode}
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium hover:underline underline-offset-4 transition-colors"
+            >
+              {isRegister ? '已有账号？去登录' : '还没有账号？去注册'}
+            </button>
+          </div>
         </div>
+
+        {/* Footer */}
+        <p className="text-center text-white/40 text-xs mt-6">
+          知了云笔记 · 构建你的知识体系
+        </p>
       </div>
     </div>
   )
