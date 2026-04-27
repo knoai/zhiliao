@@ -3,11 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { feishuApi, type FeishuBindingStatus } from '../api/feishu'
 import { ArrowLeft, Loader2, Link2, Unlink, User } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
+import { useToast } from '../components/ui/Toast'
 
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { user } = useAuthStore()
+  const { show } = useToast()
 
   const [binding, setBinding] = useState<FeishuBindingStatus | null>(null)
   const [loading, setLoading] = useState(true)
@@ -21,11 +23,11 @@ export const SettingsPage: React.FC = () => {
       feishuApi
         .callback(code)
         .then((res) => {
-          alert(res.message)
+          show(res.message, 'success')
           loadBinding()
         })
         .catch((err) => {
-          alert(err?.response?.data?.detail || '绑定失败')
+          show(err?.response?.data?.detail || '绑定失败', 'error')
         })
         .finally(() => {
           setActionLoading(false)
@@ -55,7 +57,7 @@ export const SettingsPage: React.FC = () => {
       const { auth_url } = await feishuApi.getAuthUrl()
       window.location.href = auth_url
     } catch (err: any) {
-      alert(err?.response?.data?.detail || '获取授权链接失败')
+      show(err?.response?.data?.detail || '获取授权链接失败', 'error')
     }
   }
 
@@ -66,7 +68,7 @@ export const SettingsPage: React.FC = () => {
       await feishuApi.unbind()
       await loadBinding()
     } catch (err: any) {
-      alert(err?.response?.data?.detail || '解绑失败')
+      show(err?.response?.data?.detail || '解绑失败', 'error')
     } finally {
       setActionLoading(false)
     }

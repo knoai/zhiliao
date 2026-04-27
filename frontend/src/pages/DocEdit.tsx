@@ -7,6 +7,7 @@ import { SlateEditor } from '../components/editor/SlateEditor'
 import { SlateRenderer } from '../components/editor/SlateRenderer'
 import { Modal } from '../components/ui/Modal'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
+import { useToast } from '../components/ui/Toast'
 import {
   DocEditHeader,
   DocSidebar,
@@ -40,6 +41,7 @@ export const DocEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const { readMode, toggleReadMode } = useDocStore()
   const { user } = useAuthStore()
+  const { show } = useToast()
   const { data: docs = [] } = useDocs()
   const { data: docData } = useDoc(id || '')
   const createDocMut = useCreateDoc()
@@ -249,7 +251,7 @@ export const DocEditPage: React.FC = () => {
       setSaveStatus('saved')
       localStorage.removeItem(`doc-draft-${id}`)
     } catch (err: any) {
-      alert(err.message || '导入失败')
+      show(err.message || '导入失败', 'error')
     } finally {
       setImporting(false)
     }

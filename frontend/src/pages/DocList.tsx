@@ -8,9 +8,11 @@ import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { FileText, Search, Trash2, Folder, Tag, CheckCircle2, RotateCcw, Move, Plus, ChevronRight, FileEdit, Upload } from 'lucide-react'
 import { importFile, triggerFileSelect } from '../utils/importUtils'
+import { useToast } from '../components/ui/Toast'
 
 export const DocListPage: React.FC = () => {
   const navigate = useNavigate()
+  const { show } = useToast()
   const [searchParams] = useSearchParams()
   const folderId = searchParams.get('folder')
   const statusFilter = searchParams.get('status')
@@ -210,7 +212,7 @@ export const DocListPage: React.FC = () => {
                       await updateDoc.mutateAsync({ id: doc.id, data: { title, content } })
                       navigate(`/docs/${doc.id}`)
                     } catch (err: any) {
-                      alert(err.message || '导入失败')
+                      show(err.message || '导入失败', 'error')
                     } finally {
                       setImporting(false)
                     }

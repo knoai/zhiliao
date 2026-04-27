@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useSlate } from 'slate-react'
+import { useToast } from '../ui/Toast'
 import { Editor, Transforms } from 'slate'
 import { 
   Bold, Italic, Underline, Code, 
@@ -32,6 +33,7 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({ icon, isActive, onClick, 
 
 export const Toolbar: React.FC = () => {
   const editor = useSlate()
+  const { show } = useToast()
 
   return (
     <div className="flex items-center gap-1 px-4 py-2 border-b border-gray-200 bg-gray-50 flex-wrap">
@@ -123,6 +125,7 @@ const InsertDividerButton: React.FC = () => {
 
 const ImportButton: React.FC = () => {
   const editor = useSlate()
+  const { show } = useToast()
   const [showMenu, setShowMenu] = useState(false)
   const [importing, setImporting] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -145,7 +148,7 @@ const ImportButton: React.FC = () => {
         Transforms.insertFragment(editor, content)
         setShowMenu(false)
       } catch (err: any) {
-        alert(err.message || '导入失败')
+        show(err.message || '导入失败', 'error')
       } finally {
         setImporting(false)
       }

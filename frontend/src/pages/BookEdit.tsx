@@ -20,6 +20,7 @@ import { EmptyState } from '../components/ui/EmptyState'
 import { SlateEditor } from '../components/editor/SlateEditor'
 import { bookApi } from '../api/book'
 import { useBook, useUpdateBook, useBookChapters, useCreateChapter, useUpdateChapter, useDeleteChapter } from '../hooks/useBooks'
+import { useToast } from '../components/ui/Toast'
 import { Descendant } from 'slate'
 import type { Book, Chapter, ChapterTree } from '../types'
 import { importFile, triggerFileSelect } from '../utils/importUtils'
@@ -171,6 +172,7 @@ export const BookEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
+  const { show } = useToast()
   // 通过路径判断是否为新建模式
   const isNew = location.pathname.endsWith('/new') || id === 'new'
 
@@ -497,7 +499,7 @@ export const BookEditPage: React.FC = () => {
                       setCurrentChapter(newChapter)
                       setContent(content)
                     } catch (err: any) {
-                      alert(err.message || '导入失败')
+                      show(err.message || '导入失败', 'error')
                     } finally {
                       setImporting(false)
                     }

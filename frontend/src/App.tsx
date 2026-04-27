@@ -11,6 +11,7 @@ import { DocEditPage } from './pages/DocEdit'
 import { BookListPage } from './pages/BookList'
 import { BookEditPage } from './pages/BookEdit'
 import { MainLayout } from './components/layout/MainLayout'
+import { ToastProvider } from './components/ui/Toast'
 
 // Protected route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -55,6 +56,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <ToastProvider>
       <Routes>
       {/* 首页 - 所有人可访问 */}
       <Route path="/" element={<HomePage />} />
@@ -124,6 +126,7 @@ function App() {
       {/* 默认重定向 */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+      </ToastProvider>
     </QueryClientProvider>
   )
 }

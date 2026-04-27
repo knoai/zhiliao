@@ -11,6 +11,7 @@ import {
   Upload
 } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
+import { useToast } from '../components/ui/Toast'
 import { docApi } from '../api/doc'
 import { useDocs } from '../hooks/useDocs'
 import { useBooks } from '../hooks/useBooks'
@@ -21,6 +22,7 @@ import { importFile, triggerFileSelect } from '../utils/importUtils'
 export const WorkspacePage: React.FC = () => {
   const navigate = useNavigate()
   const { user } = useAuthStore()
+  const { show } = useToast()
   const [importing, setImporting] = useState(false)
 
   const { data: docs = [], isLoading: docsLoading } = useDocs()
@@ -117,7 +119,7 @@ export const WorkspacePage: React.FC = () => {
                   await docApi.update(doc.id, { title, content })
                   navigate(`/docs/${doc.id}`)
                 } catch (err: any) {
-                  alert(err.message || '导入失败')
+                  show(err.message || '导入失败', 'error')
                 } finally {
                   setImporting(false)
                 }
