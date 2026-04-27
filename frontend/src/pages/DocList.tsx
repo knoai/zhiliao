@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { useDocs, useDeleteDoc, useCreateDoc, useUpdateDoc } from '../hooks/useDocs'
 import { useFolders, useCreateFolder, useDeleteFolder } from '../hooks/useFolders'
 import { folderApi } from '../api/folder'
@@ -16,6 +17,7 @@ import { SkeletonList } from '../components/ui/Skeleton'
 
 export const DocListPage: React.FC = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { show } = useToast()
   const [searchParams] = useSearchParams()
   const folderId = searchParams.get('folder')
@@ -120,6 +122,8 @@ export const DocListPage: React.FC = () => {
         }
 
         await importNode(tree, folderId || undefined)
+        queryClient.invalidateQueries({ queryKey: ['docs'] })
+        queryClient.invalidateQueries({ queryKey: ['folders'] })
         show(`成功导入 ${imported} 个文档`, 'success')
       } catch (err: any) {
         show(err.message || '导入失败', 'error')

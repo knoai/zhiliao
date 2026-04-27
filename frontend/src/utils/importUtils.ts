@@ -146,10 +146,10 @@ export async function importFolder(files: File[]): Promise<ImportFolderNode> {
         console.warn(`解析文件失败: ${node.path}`, err)
         node.content = parsePlainTextToSlate(`[导入失败: ${err?.message || '未知错误'}]`)
       }
+      return
     }
-    for (const child of node.children) {
-      await parseNode(child)
-    }
+    // 同一层级并行解析，提升速度
+    await Promise.all(node.children.map((child) => parseNode(child)))
   }
 
   await parseNode(tree)
