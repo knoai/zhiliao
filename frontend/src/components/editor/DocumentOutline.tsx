@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import type { Descendant } from 'slate'
 import { Link2 } from 'lucide-react'
 
@@ -36,6 +36,7 @@ export const DocumentOutline: React.FC<DocumentOutlineProps> = ({
 }) => {
   const [headings, setHeadings] = useState<Heading[]>([])
   const [activeId, setActiveId] = useState<string>('')
+  const visibleRef = useRef<Set<string>>(new Set())
 
   // 提取标题 - 优先使用 content 中已有的 id
   useEffect(() => {
@@ -61,41 +62,64 @@ export const DocumentOutline: React.FC<DocumentOutlineProps> = ({
     setHeadings(extracted)
   }, [content])
 
-  // 监听滚动，高亮当前标题
+  // 使用 IntersectionObserver 高亮当前标题
   useEffect(() => {
     if (headings.length === 0) return
 
     const scrollContainer = document.getElementById('editor-scroll-container')
     if (!scrollContainer) return
 
-    const handleScroll = () => {
-      const headingElements = headings
-        .map((h) => document.getElementById(h.id))
-        .filter(Boolean)
-
-      if (headingElements.length === 0) return
-
-      const scrollTop = scrollContainer.scrollTop + 100
-
-      for (let i = headingElements.length - 1; i >= 0; i--) {
-        const el = headingElements[i]
-        if (el) {
-          // 计算元素相对于滚动容器的实际偏移
-          const elOffsetTop = getRelativeOffsetTop(el as HTMLElement, scrollContainer)
-          if (elOffsetTop <= scrollTop) {
-            setActiveId(headings[i].id)
-            return
-          }
+    const updateActive = () => {
+      const visible = visibleRef.current
+      if (visible.size === 0) {
+        // 没有可见标题时，保持上一个 active 或设为第一个
+        return
+      }
+      // 在可见标题中按文档顺序选择最上面的
+      for (const h of headings) {
+        if (visible.has(h.id)) {
+          setActiveId(h.id)
+          return
         }
       }
-
-      setActiveId(headings[0]?.id || '')
     }
 
-    scrollContainer.addEventListener('scroll', handleScroll)
-    handleScroll()
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const id = entry.target.id
+          if (entry.isIntersecting) {
+            visibleRef.current.add(id)
+          } else {
+            visibleRef.current.delete(id)
+          }
+        })
+        updateActive()
+      },
+      {
+        root: scrollContainer,
+        rootMargin: '-80px 0px -70% 0px',
+        threshold: 0,
+      }
+    )
 
-    return () => scrollContainer.removeEventListener('scroll', handleScroll)
+    // 观察所有标题元素（延迟确保 DOM 已渲染）
+    const observeHeadings = () => {
+      headings.forEach((h) => {
+        const el = document.getElementById(h.id)
+        if (el) observer.observe(el)
+      })
+      // 初始高亮
+      updateActive()
+    }
+
+    const timer = setTimeout(observeHeadings, 100)
+
+    return () => {
+      clearTimeout(timer)
+      observer.disconnect()
+      visibleRef.current.clear()
+    }
   }, [headings])
 
   const handleClick = (heading: Heading) => {
