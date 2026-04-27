@@ -47,8 +47,21 @@ export const DocEditPage: React.FC = () => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [showHistory, setShowHistory] = useState(false)
   const [versions, setVersions] = useState<DocVersion[]>([])
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth < 1024)
+  const [outlineOpen, setOutlineOpen] = useState(false)
   const [importing, setImporting] = useState(false)
+
+  // 监听窗口大小变化，自动折叠侧边栏
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setSidebarCollapsed(true)
+        setOutlineOpen(false)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Version preview & restore
   const [previewVersion, setPreviewVersion] = useState<DocVersion | null>(null)
@@ -268,6 +281,8 @@ export const DocEditPage: React.FC = () => {
         importing={importing}
         sidebarCollapsed={sidebarCollapsed}
         onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+        outlineOpen={outlineOpen}
+        onToggleOutline={() => setOutlineOpen(!outlineOpen)}
       />
 
       {/* Main Body */}
@@ -307,15 +322,37 @@ export const DocEditPage: React.FC = () => {
           />
         </DocCanvas>
 
-        {/* Right Outline Panel */}
-        <DocOutlinePanel
-          content={content}
-          readMode={readMode}
-          author={user?.username}
-          createdAt={currentDoc?.created_at}
-          updatedAt={currentDoc?.updated_at}
-          wordCount={currentDoc?.word_count}
-        />
+        {/* Right Outline Panel - Desktop */}
+        <div className="hidden lg:block">
+          <DocOutlinePanel
+            content={content}
+            readMode={readMode}
+            author={user?.username}
+            createdAt={currentDoc?.created_at}
+            updatedAt={currentDoc?.updated_at}
+            wordCount={currentDoc?.word_count}
+          />
+        </div>
+
+        {/* Mobile Outline Drawer */}
+        {outlineOpen && (
+          <>
+            <div
+              className="fixed inset-0 z-40 bg-black/30 lg:hidden"
+              onClick={() => setOutlineOpen(false)}
+            />
+            <div className="fixed right-0 top-0 bottom-0 z-50 w-64 bg-white border-l border-gray-200 overflow-y-auto lg:hidden">
+              <DocOutlinePanel
+                content={content}
+                readMode={readMode}
+                author={user?.username}
+                createdAt={currentDoc?.created_at}
+                updatedAt={currentDoc?.updated_at}
+                wordCount={currentDoc?.word_count}
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {/* History Drawer */}

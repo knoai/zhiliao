@@ -11,6 +11,8 @@ import {
   Loader2,
   CheckCircle2,
   PanelLeft,
+  PanelRight,
+  Menu,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
@@ -33,6 +35,8 @@ interface DocEditHeaderProps {
   importing: boolean
   sidebarCollapsed: boolean
   onToggleSidebar: () => void
+  outlineOpen: boolean
+  onToggleOutline: () => void
 }
 
 export const DocEditHeader: React.FC<DocEditHeaderProps> = ({
@@ -51,6 +55,8 @@ export const DocEditHeader: React.FC<DocEditHeaderProps> = ({
   importing,
   sidebarCollapsed,
   onToggleSidebar,
+  outlineOpen,
+  onToggleOutline,
 }) => {
   const navigate = useNavigate()
   const [showMenu, setShowMenu] = useState(false)
@@ -70,10 +76,18 @@ export const DocEditHeader: React.FC<DocEditHeaderProps> = ({
     <div className="flex items-center justify-between px-4 h-12 bg-white border-b border-gray-200 flex-shrink-0">
       {/* Left: Breadcrumb + Sidebar Toggle */}
       <div className="flex items-center gap-2 flex-1 min-w-0">
+        {/* Mobile sidebar toggle */}
+        <button
+          onClick={onToggleSidebar}
+          className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg text-gray-600"
+          title="文档列表"
+        >
+          <Menu className="w-4 h-4" />
+        </button>
         {sidebarCollapsed && (
           <button
             onClick={onToggleSidebar}
-            className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-600 mr-1"
+            className="hidden lg:block p-1.5 hover:bg-gray-100 rounded-lg text-gray-600 mr-1"
             title="展开侧边栏"
           >
             <PanelLeft className="w-4 h-4" />
@@ -116,6 +130,15 @@ export const DocEditHeader: React.FC<DocEditHeaderProps> = ({
             </span>
           )}
         </div>
+
+        {/* Mobile outline toggle */}
+        <button
+          onClick={onToggleOutline}
+          className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg text-gray-600"
+          title="大纲"
+        >
+          <PanelRight className="w-4 h-4" />
+        </button>
 
         {/* Read Mode Toggle */}
         <ReadModeToggle readMode={readMode} onToggle={onToggleReadMode} />

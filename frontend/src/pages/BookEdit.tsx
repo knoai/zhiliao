@@ -12,7 +12,9 @@ import {
   FileText,
   Type,
   Palette,
-  Upload
+  Upload,
+  Menu,
+  X
 } from 'lucide-react'
 import { EmptyState } from '../components/ui/EmptyState'
 import { SlateEditor } from '../components/editor/SlateEditor'
@@ -181,6 +183,7 @@ export const BookEditPage: React.FC = () => {
   const [importing, setImporting] = useState(false)
   const [titleVisible, setTitleVisible] = useState(true)
   const [toolbarVisible, setToolbarVisible] = useState(true)
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false)
 
   // 加载书籍和章节
   useEffect(() => {
@@ -458,8 +461,8 @@ export const BookEditPage: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Chapter Tree Sidebar */}
-        <aside className="w-64 border-r border-slate-200 bg-slate-50 flex flex-col">
+        {/* Chapter Tree Sidebar - Desktop */}
+        <aside className="hidden md:flex w-64 border-r border-slate-200 bg-slate-50 flex-col">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
             <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
               <button
@@ -534,7 +537,16 @@ export const BookEditPage: React.FC = () => {
 
         {/* Editor */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
-          {/* Floating Controls - Top Right */}
+          {/* Mobile Sidebar Toggle + Floating Controls */}
+          <div className="absolute top-4 left-4 z-30 md:hidden">
+            <button
+              onClick={() => setShowMobileSidebar(true)}
+              className="p-2 rounded-lg border shadow-sm bg-white/80 border-slate-200 text-slate-600 hover:bg-white"
+              title="章节列表"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+          </div>
           {currentChapter && (
             <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
               <button
@@ -609,6 +621,58 @@ export const BookEditPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Mobile Sidebar Drawer */}
+      {showMobileSidebar && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/30 md:hidden"
+            onClick={() => setShowMobileSidebar(false)}
+          />
+          <div className="fixed left-0 top-0 bottom-0 z-50 w-64 bg-slate-50 border-r border-slate-200 flex flex-col md:hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <button
+                  onClick={() => navigate('/books')}
+                  className="p-2 hover:bg-slate-100 rounded-lg text-slate-600"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <span className="text-slate-900 font-semibold truncate max-w-[120px]">{title || '未命名书籍'}</span>
+              </div>
+              <button
+                onClick={() => setShowMobileSidebar(false)}
+                className="p-2 hover:bg-slate-100 rounded-lg text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2">
+              {chapters.length === 0 ? (
+                <EmptyState
+                  title="这本书还没有章节"
+                  description="点击上方 + 创建第一个章节，开始你的写作之旅"
+                  action={{ label: '创建第一个章节', onClick: () => handleCreateChapter() }}
+                  className="py-8"
+                />
+              ) : (
+                chapters.map((chapter) => (
+                  <ChapterItem
+                    key={chapter.id}
+                    chapter={chapter}
+                    level={0}
+                    selectedId={currentChapter?.id || null}
+                    expandedIds={expandedIds}
+                    onSelect={(id) => { loadChapter(id); setShowMobileSidebar(false); }}
+                    onToggle={handleToggle}
+                    onContextMenu={handleContextMenu}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Context Menu */}
       {showChapterMenu && (

@@ -1,9 +1,11 @@
-import React, { useCallback, useMemo, useEffect, useRef } from 'react'
+import React, { useCallback, useMemo, useEffect, useRef, useState } from 'react'
 import { createEditor, Descendant, Editor, Transforms, Element as SlateElement, Range, Point } from 'slate'
-import { Slate, Editable, withReact, useSlate } from 'slate-react'
+import { Slate, Editable, withReact } from 'slate-react'
 import { withHistory } from 'slate-history'
 import { isHotkey } from 'is-hotkey'
 import { Toolbar } from './Toolbar'
+import { BubbleToolbar } from './BubbleToolbar'
+import { SlashCommand } from './SlashCommand'
 import { Element } from './Element'
 import { Leaf } from './Leaf'
 import { toggleMark } from './utils'
@@ -81,6 +83,11 @@ export const SlateEditor: React.FC<SlateEditorProps> = ({
     return withShortcuts(withHistory(withReact(createEditor())))
   }, [])
 
+  // Slash command state
+  const [slashOpen, setSlashOpen] = useState(false)
+  const [slashPos, setSlashPos] = useState({ top: 0, left: 0 })
+  const [slashFilter, setSlashFilter] = useState('')
+
   // 确保 value 有效
   const safeValue = useMemo(() => {
     return value && value.length > 0 ? deepClone(value) : deepClone(DEFAULT_VALUE)
@@ -121,8 +128,37 @@ export const SlateEditor: React.FC<SlateEditorProps> = ({
     }
   }, [value]) // 只在 value 引用变化时触发
 
+  const getSlashPosition = (): { top: number; left: number } => {
+    const domSelection = window.getSelection()
+    if (!domSelection || domSelection.rangeCount === 0) return { top: 0, left: 0 }
+    const domRange = domSelection.getRangeAt(0)
+    const rect = domRange.getBoundingClientRect()
+    return { top: rect.bottom + 4, left: rect.left }
+  }
+
   const onKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
     if (readOnly) return
+
+    // Slash command filter handling
+    if (slashOpen) {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Enter' || event.key === 'Escape') {
+        return // Let SlashCommand handle these
+      }
+      if (event.key === 'Backspace') {
+        setSlashFilter((prev) => {
+          const next = prev.slice(0, -1)
+          if (next.length === 0 && prev.length === 0) {
+            setSlashOpen(false)
+          }
+          return next
+        })
+        return
+      }
+      if (event.key.length === 1) {
+        setSlashFilter((prev) => prev + event.key)
+        return
+      }
+    }
 
     for (const hotkey in HOTKEYS) {
       if (isHotkey(hotkey, event as any)) {
@@ -137,7 +173,14 @@ export const SlateEditor: React.FC<SlateEditorProps> = ({
       event.preventDefault()
       Transforms.insertText(editor, '  ')
     }
-  }, [editor, readOnly])
+
+    if (event.key === '/' && !slashOpen) {
+      const pos = getSlashPosition()
+      setSlashPos(pos)
+      setSlashOpen(true)
+      setSlashFilter('')
+    }
+  }, [editor, readOnly, slashOpen])
 
   const onPaste = useCallback((event: React.ClipboardEvent<HTMLDivElement>) => {
     if (readOnly) return
@@ -162,7 +205,37 @@ export const SlateEditor: React.FC<SlateEditorProps> = ({
   const handleEditorChange = useCallback((newValue: Descendant[]) => {
     lastEditorValueRef.current = newValue
     onChange(newValue)
-  }, [onChange])
+
+    // 检测是否还在 slash command 状态
+    if (slashOpen) {
+      const { selection } = editor
+      if (!selection || !Range.isCollapsed(selection)) {
+        setSlashOpen(false)
+        setSlashFilter('')
+        return
+      }
+      const [match] = Editor.nodes(editor, {
+        match: (n) => SlateElement.isElement(n) && Editor.isBlock(editor, n),
+        mode: 'lowest',
+      })
+      if (!match) {
+        setSlashOpen(false)
+        setSlashFilter('')
+        return
+      }
+      const [block] = match
+      if ((block as SlateElement).type !== 'paragraph') {
+        setSlashOpen(false)
+        setSlashFilter('')
+        return
+      }
+    }
+  }, [onChange, editor, slashOpen])
+
+  const closeSlash = useCallback(() => {
+    setSlashOpen(false)
+    setSlashFilter('')
+  }, [])
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -171,7 +244,13 @@ export const SlateEditor: React.FC<SlateEditorProps> = ({
         initialValue={initialValueRef.current}
         onChange={handleEditorChange}
       >
-        {/* Toolbar hidden by design */}
+        {showToolbar && <BubbleToolbar />}
+        <SlashCommand
+          open={slashOpen}
+          onClose={closeSlash}
+          position={slashPos}
+          filter={slashFilter}
+        />
         <div className="flex-1 overflow-hidden flex">
           {/* Editor Content */}
           <div className="flex-1 overflow-y-auto py-0">
