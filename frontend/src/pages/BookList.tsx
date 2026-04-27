@@ -12,6 +12,8 @@ import {
   ArrowLeft
 } from 'lucide-react'
 import { useBooks, useDeleteBook } from '../hooks/useBooks'
+import { EmptyState } from '../components/ui/EmptyState'
+import { SkeletonGrid } from '../components/ui/Skeleton'
 import { formatRelativeTime } from '../utils/date'
 
 export const BookListPage: React.FC = () => {
@@ -74,24 +76,14 @@ export const BookListPage: React.FC = () => {
       {/* Book Grid */}
       <div className="flex-1 overflow-y-auto p-6">
         {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
-          </div>
+          <SkeletonGrid count={8} />
         ) : filteredBooks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-slate-400">
-            <BookOpen className="w-16 h-16 mb-4 opacity-50" />
-            <p className="text-lg mb-2">
-              {keyword ? '未找到匹配的书籍' : '还没有创建书籍'}
-            </p>
-            {!keyword && (
-              <button
-                onClick={() => navigate('/books/new')}
-                className="text-amber-600 hover:text-amber-700"
-              >
-                创建第一本书
-              </button>
-            )}
-          </div>
+          <EmptyState
+            icon={<BookOpen className="w-16 h-16 text-slate-300" />}
+            title={keyword ? '未找到匹配的书籍' : '还没有创建书籍'}
+            action={!keyword ? { label: '创建第一本书', onClick: () => navigate('/books/new') } : undefined}
+            className="h-full"
+          />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {filteredBooks.map((book) => (

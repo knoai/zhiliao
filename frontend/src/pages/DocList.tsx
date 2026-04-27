@@ -9,6 +9,8 @@ import { zhCN } from 'date-fns/locale'
 import { FileText, Search, Trash2, Folder, Tag, CheckCircle2, RotateCcw, Move, Plus, ChevronRight, FileEdit, Upload } from 'lucide-react'
 import { importFile, triggerFileSelect } from '../utils/importUtils'
 import { useToast } from '../components/ui/Toast'
+import { EmptyState } from '../components/ui/EmptyState'
+import { SkeletonList } from '../components/ui/Skeleton'
 
 export const DocListPage: React.FC = () => {
   const navigate = useNavigate()
@@ -238,22 +240,15 @@ export const DocListPage: React.FC = () => {
         {/* Doc List */}
         <div className="flex-1 overflow-y-auto p-6">
           {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
+            <SkeletonList count={6} />
           ) : filteredDocs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-              <FileText className="w-12 h-12 mb-4 text-gray-300" />
-              <p>暂无文档</p>
-              {!searchKeyword && (
-                <button
-                  onClick={() => handleCreateDoc(folderId || undefined)}
-                  className="mt-4 text-blue-600 hover:text-blue-700 text-sm"
-                >
-                  创建第一篇文档
-                </button>
-              )}
-            </div>
+            <EmptyState
+              icon={<FileText className="w-12 h-12 text-gray-300" />}
+              title={searchKeyword ? '未找到匹配的文档' : '暂无文档'}
+              description={searchKeyword ? '尝试其他关键词' : '开始创作你的第一篇文档'}
+              action={!searchKeyword ? { label: '创建第一篇文档', onClick: () => handleCreateDoc(folderId || undefined) } : undefined}
+              className="h-64"
+            />
           ) : (
             <div className="space-y-2 max-w-5xl">
               {filteredDocs.map((doc) => (

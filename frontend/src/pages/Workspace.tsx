@@ -18,6 +18,8 @@ import { useBooks } from '../hooks/useBooks'
 import { useAuthStats } from '../hooks/useAuth'
 import { formatRelativeTime } from '../utils/date'
 import { importFile, triggerFileSelect } from '../utils/importUtils'
+import { EmptyState } from '../components/ui/EmptyState'
+import { Skeleton, SkeletonList } from '../components/ui/Skeleton'
 
 export const WorkspacePage: React.FC = () => {
   const navigate = useNavigate()
@@ -146,15 +148,25 @@ export const WorkspacePage: React.FC = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-          {statCards.map((stat) => (
-            <div key={stat.label} className="bg-white rounded-xl p-4 border border-slate-200" onClick={() => stat.url && navigate(stat.url)} style={{ cursor: stat.url ? 'pointer' : 'default' }}>
-              <div className={`w-10 h-10 ${stat.color} rounded-lg flex items-center justify-center mb-3`}>
-                <stat.icon className="w-5 h-5" />
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-xl p-4 border border-slate-100">
+                <Skeleton className="w-10 h-10 rounded-lg mb-3" />
+                <Skeleton className="h-7 w-16 mb-1" />
+                <Skeleton className="h-4 w-12" />
               </div>
-              <div className="text-2xl font-bold text-slate-900">{stat.count}</div>
-              <div className="text-sm text-slate-600">{stat.label}</div>
-            </div>
-          ))}
+            ))
+          ) : (
+            statCards.map((stat) => (
+              <div key={stat.label} className="bg-white rounded-xl p-4 border border-slate-200 hover:shadow-md transition-shadow cursor-pointer" onClick={() => stat.url && navigate(stat.url)}>
+                <div className={`w-10 h-10 ${stat.color} rounded-lg flex items-center justify-center mb-3`}>
+                  <stat.icon className="w-5 h-5" />
+                </div>
+                <div className="text-2xl font-bold text-slate-900">{stat.count}</div>
+                <div className="text-sm text-slate-600">{stat.label}</div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Recent Content */}
@@ -173,18 +185,14 @@ export const WorkspacePage: React.FC = () => {
             </div>
             <div className="divide-y divide-slate-100">
               {loading ? (
-                <div className="p-8 text-center text-slate-400">加载中...</div>
+                <SkeletonList count={4} className="p-2" />
               ) : recentBooks.length === 0 ? (
-                <div className="p-8 text-center text-slate-400">
-                  <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>还没有创建书籍</p>
-                  <button
-                    onClick={() => navigate('/books/new')}
-                    className="text-blue-600 hover:text-blue-700 text-sm mt-2"
-                  >
-                    创建第一本
-                  </button>
-                </div>
+                <EmptyState
+                  icon={<BookOpen className="w-12 h-12 text-slate-300" />}
+                  title="还没有创建书籍"
+                  action={{ label: '创建第一本', onClick: () => navigate('/books/new') }}
+                  className="py-6"
+                />
               ) : (
                 recentBooks.map((book) => (
                   <button
@@ -224,18 +232,14 @@ export const WorkspacePage: React.FC = () => {
             </div>
             <div className="divide-y divide-slate-100">
               {loading ? (
-                <div className="p-8 text-center text-slate-400">加载中...</div>
+                <SkeletonList count={4} className="p-2" />
               ) : recentDocs.length === 0 ? (
-                <div className="p-8 text-center text-slate-400">
-                  <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>还没有创建文档</p>
-                  <button
-                    onClick={() => navigate('/docs/new')}
-                    className="text-blue-600 hover:text-blue-700 text-sm mt-2"
-                  >
-                    创建第一篇
-                  </button>
-                </div>
+                <EmptyState
+                  icon={<FileText className="w-12 h-12 text-slate-300" />}
+                  title="还没有创建文档"
+                  action={{ label: '创建第一篇', onClick: () => navigate('/docs/new') }}
+                  className="py-6"
+                />
               ) : (
                 recentDocs.map((doc) => (
                   <button
