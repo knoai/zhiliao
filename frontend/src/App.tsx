@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuthStore } from './stores/authStore'
 import { HomePage } from './pages/Home'
 import { WorkspacePage } from './pages/Workspace'
@@ -34,6 +35,17 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>
 }
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 分钟
+      gcTime: 1000 * 60 * 10,   // 10 分钟
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
+
 function App() {
   const { fetchUser } = useAuthStore()
 
@@ -42,7 +54,8 @@ function App() {
   }, [fetchUser])
 
   return (
-    <Routes>
+    <QueryClientProvider client={queryClient}>
+      <Routes>
       {/* 首页 - 所有人可访问 */}
       <Route path="/" element={<HomePage />} />
       
@@ -111,6 +124,7 @@ function App() {
       {/* 默认重定向 */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </QueryClientProvider>
   )
 }
 

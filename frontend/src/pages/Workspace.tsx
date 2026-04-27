@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   BookOpen, 
@@ -12,65 +12,40 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 import { docApi } from '../api/doc'
-import type { DocListItem, BookListItem, UserStats } from '../types'
-import { bookApi } from '../api/book'
-import { authApi } from '../api/auth'
+import { useDocs } from '../hooks/useDocs'
+import { useBooks } from '../hooks/useBooks'
+import { useAuthStats } from '../hooks/useAuth'
 import { formatRelativeTime } from '../utils/date'
 import { importFile, triggerFileSelect } from '../utils/importUtils'
 
 export const WorkspacePage: React.FC = () => {
   const navigate = useNavigate()
   const { user } = useAuthStore()
-  const [recentDocs, setRecentDocs] = useState<DocListItem[]>([])
-  const [recentBooks, setRecentBooks] = useState<BookListItem[]>([])
-  const [stats, setStats] = useState<UserStats>({
-    doc_count: 0,
-    book_count: 0,
-    published_doc_count: 0,
-    total_word_count: 0,
-  })
-  const [loading, setLoading] = useState(true)
   const [importing, setImporting] = useState(false)
 
-  useEffect(() => {
-    loadRecentData()
-  }, [])
+  const { data: docs = [], isLoading: docsLoading } = useDocs()
+  const { data: books = [], isLoading: booksLoading } = useBooks()
+  const { data: stats } = useAuthStats()
 
-  const loadRecentData = async () => {
-    const results = await Promise.allSettled([
-      docApi.getList(),
-      bookApi.getList(),
-      authApi.getStats()
-    ])
+  const loading = docsLoading || booksLoading
 
-    const [docsResult, booksResult, statsResult] = results
+  const recentDocs = useMemo(() => {
+    return [...docs].sort(
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    ).slice(0, 5)
+  }, [docs])
 
-    if (docsResult.status === 'fulfilled') {
-      const sorted = [...docsResult.value].sort(
-        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-      )
-      setRecentDocs(sorted.slice(0, 5))
-    }
-
-    if (booksResult.status === 'fulfilled') {
-      const sorted = [...booksResult.value].sort(
-        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-      )
-      setRecentBooks(sorted.slice(0, 5))
-    }
-
-    if (statsResult.status === 'fulfilled') {
-      setStats(statsResult.value)
-    }
-
-    setLoading(false)
-  }
+  const recentBooks = useMemo(() => {
+    return [...books].sort(
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    ).slice(0, 5)
+  }, [books])
 
   const statCards = [
-    { label: '云文档', count: stats.doc_count, icon: FileText, color: 'bg-blue-100 text-blue-600', url: '/docs' },
-    { label: '云书籍', count: stats.book_count, icon: BookOpen, color: 'bg-amber-100 text-amber-600', url: '/books' },
-    { label: '总字数', count: stats.total_word_count, icon: BarChart3, color: 'bg-purple-100 text-purple-600', url: undefined },
-    { label: '已发布', count: stats.published_doc_count, icon: PenLine, color: 'bg-green-100 text-green-600', url: '/docs?status=published' },
+    { label: '云文档', count: stats?.doc_count ?? 0, icon: FileText, color: 'bg-blue-100 text-blue-600', url: '/docs' },
+    { label: '云书籍', count: stats?.book_count ?? 0, icon: BookOpen, color: 'bg-amber-100 text-amber-600', url: '/books' },
+    { label: '总字数', count: stats?.total_word_count ?? 0, icon: BarChart3, color: 'bg-purple-100 text-purple-600', url: undefined },
+    { label: '已发布', count: stats?.published_doc_count ?? 0, icon: PenLine, color: 'bg-green-100 text-green-600', url: '/docs?status=published' },
   ]
 
   return (
