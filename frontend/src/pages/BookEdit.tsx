@@ -10,13 +10,11 @@ import {
   Globe,
   Lock,
   FileText,
-  FolderTree,
-  Menu,
-  X,
   Type,
   Palette,
   Upload
 } from 'lucide-react'
+import { EmptyState } from '../components/ui/EmptyState'
 import { SlateEditor } from '../components/editor/SlateEditor'
 import { bookApi } from '../api/book'
 import { Descendant } from 'slate'
@@ -181,9 +179,8 @@ export const BookEditPage: React.FC = () => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [showChapterMenu, setShowChapterMenu] = useState<{x: number, y: number, chapter: ChapterTree} | null>(null)
   const [importing, setImporting] = useState(false)
-  const [headerVisible, setHeaderVisible] = useState(false)
-  const [titleVisible, setTitleVisible] = useState(false)
-  const [toolbarVisible, setToolbarVisible] = useState(false)
+  const [titleVisible, setTitleVisible] = useState(true)
+  const [toolbarVisible, setToolbarVisible] = useState(true)
 
   // 加载书籍和章节
   useEffect(() => {
@@ -459,59 +456,6 @@ export const BookEditPage: React.FC = () => {
         <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${headerVisible ? 'rotate-180' : ''}`} />
       </button> */}
 
-      {/* Drawer Header - 默认隐藏，点击后滑出 */}
-      <header 
-        className={`absolute top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-lg transition-transform duration-300 ${
-          headerVisible ? 'translate-y-0' : '-translate-y-full'
-        }`}
-      >
-        <div className="flex items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/books')}
-              className="p-2 hover:bg-slate-100 rounded-lg text-slate-600"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-amber-600" />
-              </div>
-              <div>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  onBlur={handleSaveBook}
-                  className="font-semibold text-slate-900 bg-transparent border-none focus:outline-none focus:ring-0 p-0"
-                  placeholder="书籍标题"
-                />
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <span>{book?.word_count || 0} 字</span>
-                  <span>·</span>
-                  <span className="flex items-center gap-1">
-                    {book?.visibility === 'public' ? (
-                      <>
-                        <Globe className="w-3 h-3" />
-                        公开
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="w-3 h-3" />
-                        私密
-                      </>
-                    )}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Chapter Tree Sidebar */}
@@ -524,14 +468,7 @@ export const BookEditPage: React.FC = () => {
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={handleSaveBook}
-                className="font-semibold text-slate-900 bg-transparent border-none focus:outline-none focus:ring-0 p-0"
-                placeholder="书籍标题"
-              />
+              <span className="text-slate-900 font-semibold truncate max-w-[120px]">{title || '未命名书籍'}</span>
             </div>
             <div className="flex items-center gap-1">
               <button
@@ -572,15 +509,12 @@ export const BookEditPage: React.FC = () => {
           </div>
           <div className="flex-1 overflow-y-auto p-2">
             {chapters.length === 0 ? (
-              <div className="text-center py-8 text-slate-400 text-sm">
-                <p>空空如也</p>
-                <button
-                  onClick={() => handleCreateChapter()}
-                  className="text-amber-600 hover:text-amber-700 mt-2"
-                >
-                  创建
-                </button>
-              </div>
+              <EmptyState
+                title="这本书还没有章节"
+                description="点击上方 + 创建第一个章节，开始你的写作之旅"
+                action={{ label: '创建第一个章节', onClick: () => handleCreateChapter() }}
+                className="py-8"
+              />
             ) : (
               chapters.map((chapter) => (
                 <ChapterItem
@@ -661,18 +595,17 @@ export const BookEditPage: React.FC = () => {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
-              <BookOpen className="w-16 h-16 mb-4 opacity-30" />
-              <p>选择一个章节开始编辑</p>
-              {chapters.length > 0 && (
-                <button
-                  onClick={() => handleCreateChapter()}
-                  className="mt-4 text-amber-600 hover:text-amber-700"
-                >
-                  或创建新篇
-                </button>
-              )}
-            </div>
+            <EmptyState
+              icon={<BookOpen className="w-16 h-16 text-slate-300" />}
+              title="选择一个章节开始编辑"
+              description={chapters.length > 0 ? '在左侧章节树中选择一个章节，或创建新篇' : '先创建第一个章节'}
+              action={
+                chapters.length > 0
+                  ? { label: '创建新篇', onClick: () => handleCreateChapter() }
+                  : undefined
+              }
+              className="h-full"
+            />
           )}
         </div>
       </div>

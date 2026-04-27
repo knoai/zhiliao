@@ -4,6 +4,9 @@ import { Descendant } from 'slate'
 import { useDocStore } from '../stores/docStore'
 import { useAuthStore } from '../stores/authStore'
 import { SlateEditor } from '../components/editor/SlateEditor'
+import { SlateRenderer } from '../components/editor/SlateRenderer'
+import { Modal } from '../components/ui/Modal'
+import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import {
   DocEditHeader,
   DocSidebar,
@@ -46,6 +49,10 @@ export const DocEditPage: React.FC = () => {
   const [versions, setVersions] = useState<DocVersion[]>([])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [importing, setImporting] = useState(false)
+
+  // Version preview & restore
+  const [previewVersion, setPreviewVersion] = useState<DocVersion | null>(null)
+  const [restoreTarget, setRestoreTarget] = useState<DocVersion | null>(null)
 
   const titleSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const contentSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -234,6 +241,14 @@ export const DocEditPage: React.FC = () => {
     }
   }
 
+  const handleRestoreVersion = (version: DocVersion) => {
+    setContent(version.content as Descendant[])
+    setRestoreTarget(null)
+    setShowHistory(false)
+    // 触发保存
+    setTimeout(() => saveDoc(), 0)
+  }
+
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden">
       {/* Header */}
@@ -324,6 +339,20 @@ export const DocEditPage: React.FC = () => {
                     })}
                   </div>
                   <div className="text-gray-500">{version.word_count} 字</div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <button
+                      onClick={() => setPreviewVersion(version)}
+                      className="text-xs px-2 py-1 bg-white border border-gray-200 rounded hover:bg-gray-100 text-gray-700"
+                    >
+                      预览
+                    </button>
+                    <button
+                      onClick={() => setRestoreTarget(version)}
+                      className="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded"
+                    >
+                      恢复
+                    </button>
+                  </div>
                 </div>
               ))}
               {versions.length === 0 && (
@@ -333,6 +362,42 @@ export const DocEditPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Version Preview Modal */}
+      {previewVersion && (
+        <Modal
+          isOpen={!!previewVersion}
+          onClose={() => setPreviewVersion(null)}
+          title={`版本 ${previewVersion.version} 预览`}
+          size="lg"
+        >
+          <div className="space-y-4">
+            <div className="text-xs text-gray-500 flex items-center gap-3">
+              <span>
+                {format(new Date(previewVersion.created_at), 'yyyy-MM-dd HH:mm:ss', {
+                  locale: zhCN,
+                })}
+              </span>
+              <span>{previewVersion.word_count} 字</span>
+            </div>
+            <div className="border border-gray-200 rounded-lg p-6 bg-white max-h-[60vh] overflow-y-auto">
+              <h1 className="text-2xl font-bold mb-4">{currentDoc?.title || '历史版本'}</h1>
+              <SlateRenderer content={previewVersion.content as Descendant[]} />
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Restore Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={!!restoreTarget}
+        onClose={() => setRestoreTarget(null)}
+        onConfirm={() => restoreTarget && handleRestoreVersion(restoreTarget)}
+        title="恢复版本"
+        message="当前内容将被覆盖，是否继续？"
+        confirmText="恢复"
+        confirmVariant="primary"
+      />
     </div>
   )
 }

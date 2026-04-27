@@ -1,6 +1,9 @@
-import React from 'react'
+import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, PanelLeft, FileText } from 'lucide-react'
+import { Plus, PanelLeft, FileText, Search } from 'lucide-react'
+import { useFolderStore } from '@/stores/folderStore'
+import { FolderTree } from '@/components/layout/FolderTree'
+import { EmptyState } from '@/components/ui/EmptyState'
 import type { DocListItem } from '@/types'
 
 interface DocSidebarProps {
@@ -19,6 +22,23 @@ export const DocSidebar: React.FC<DocSidebarProps> = ({
   onCreateDoc,
 }) => {
   const navigate = useNavigate()
+  const { folders, fetchFolders } = useFolderStore()
+  const [searchKeyword, setSearchKeyword] = useState('')
+
+  // 确保文件夹数据已加载
+  React.useEffect(() => {
+    fetchFolders()
+  }, [fetchFolders])
+
+  const filteredDocs = useMemo(() => {
+    if (!searchKeyword.trim()) return docs
+    const kw = searchKeyword.toLowerCase()
+    return docs.filter(
+      (doc) =>
+        doc.title.toLowerCase().includes(kw) ||
+        doc.tags.some((tag) => tag.toLowerCase().includes(kw))
+    )
+  }, [docs, searchKeyword])
 
   return (
     <>
@@ -49,30 +69,66 @@ export const DocSidebar: React.FC<DocSidebarProps> = ({
           </div>
         </div>
 
+        {/* Search */}
+        {!collapsed && (
+          <div className="px-3 py-2 border-b border-gray-200">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="搜索文档..."
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                className="w-full pl-7 pr-2 py-1.5 text-sm border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Folder Tree */}
+        {!collapsed && folders.length > 0 && (
+          <div className="px-2 py-2 border-b border-gray-200">
+            <FolderTree
+              folders={folders}
+              onCreateSubFolder={() => {}}
+              onDeleteFolder={() => {}}
+              onCreateDoc={(folderId) => onCreateDoc()}
+            />
+          </div>
+        )}
+
         {/* Doc List */}
         <div className="flex-1 overflow-y-auto py-2">
-          {docs.map((doc) => (
-            <button
-              key={doc.id}
-              onClick={() => navigate(`/docs/${doc.id}`)}
-              className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors ${
-                currentDocId === doc.id
-                  ? 'bg-blue-50/60 text-blue-600 border-l-[3px] border-blue-600'
-                  : 'text-gray-700 hover:bg-gray-50 border-l-[3px] border-transparent'
-              }`}
-            >
-              <FileText
-                className={`w-4 h-4 flex-shrink-0 ${
-                  currentDocId === doc.id ? 'text-blue-500' : 'text-gray-400'
+          {filteredDocs.length === 0 ? (
+            <EmptyState
+              title={searchKeyword ? '未找到匹配的文档' : '暂无文档'}
+              description={searchKeyword ? '尝试更换关键词搜索' : '点击上方 + 创建第一篇文档'}
+              action={
+                !searchKeyword
+                  ? { label: '创建文档', onClick: onCreateDoc }
+                  : undefined
+              }
+              className="py-8"
+            />
+          ) : (
+            filteredDocs.map((doc) => (
+              <button
+                key={doc.id}
+                onClick={() => navigate(`/docs/${doc.id}`)}
+                className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors ${
+                  currentDocId === doc.id
+                    ? 'bg-blue-50/60 text-blue-600 border-l-[3px] border-blue-600'
+                    : 'text-gray-700 hover:bg-gray-50 border-l-[3px] border-transparent'
                 }`}
-              />
-              <span className="truncate">{doc.title || '无标题文档'}</span>
-            </button>
-          ))}
-          {docs.length === 0 && (
-            <div className="text-center text-gray-400 text-sm py-8">
-              暂无文档
-            </div>
+              >
+                <FileText
+                  className={`w-4 h-4 flex-shrink-0 ${
+                    currentDocId === doc.id ? 'text-blue-500' : 'text-gray-400'
+                  }`}
+                />
+                <span className="truncate">{doc.title || '无标题文档'}</span>
+              </button>
+            ))
           )}
         </div>
       </div>

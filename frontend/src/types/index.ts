@@ -88,6 +88,7 @@ export interface DocListItem {
 export interface DocVersion {
   id: string
   doc_id: string
+  content: SlateNode[]
   word_count: number
   version: number
   created_at: string

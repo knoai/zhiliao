@@ -70,6 +70,7 @@ class DocListItem(BaseModel):
 class DocVersionResponse(BaseModel):
     id: UUID
     doc_id: UUID
+    content: List[SlateNode]
     word_count: int
     version: int
     created_at: datetime
