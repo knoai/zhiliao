@@ -125,8 +125,8 @@ export const DocListPage: React.FC = () => {
         queryClient.invalidateQueries({ queryKey: ['docs'] })
         queryClient.invalidateQueries({ queryKey: ['folders'] })
         show(`成功导入 ${imported} 个文档`, 'success')
-      } catch (err: any) {
-        show(err.message || '导入失败', 'error')
+      } catch (err) {
+        show((err as Error).message || '导入失败', 'error')
       } finally {
         setImporting(false)
       }
@@ -160,7 +160,7 @@ export const DocListPage: React.FC = () => {
               setShowCreateFolder(true)
             }}
             className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-gray-700"
-            title="新建文件夹"
+            title="新建文件夹" aria-label="新建文件夹"
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -264,8 +264,8 @@ export const DocListPage: React.FC = () => {
                       const doc = await createDoc.mutateAsync({ folder_id: folderId || undefined })
                       await updateDoc.mutateAsync({ id: doc.id, data: { title, content } })
                       navigate(`/docs/${doc.id}`)
-                    } catch (err: any) {
-                      show(err.message || '导入失败', 'error')
+                    } catch (err) {
+                      show((err as Error).message || '导入失败', 'error')
                     } finally {
                       setImporting(false)
                     }
@@ -281,7 +281,7 @@ export const DocListPage: React.FC = () => {
                 disabled={importing}
                 onClick={() => handleImportFolder()}
                 className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="导入整个文件夹，保持层级结构"
+                title="导入整个文件夹，保持层级结构" aria-label="导入文件夹"
               >
                 <Folder className={`w-4 h-4 ${importing ? 'animate-spin' : ''}`} />
                 {importing ? '导入中...' : '导入文件夹'}
@@ -370,7 +370,7 @@ export const DocListPage: React.FC = () => {
                         handleMove(doc)
                       }}
                       className="p-2 hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded transition-colors"
-                      title="移动到"
+                      title="移动到" aria-label="移动到"
                     >
                       <Move className="w-4 h-4" />
                     </button>
@@ -380,7 +380,7 @@ export const DocListPage: React.FC = () => {
                         handleDelete(doc.id)
                       }}
                       className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded transition-colors"
-                      title="删除"
+                      title="删除" aria-label="删除"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

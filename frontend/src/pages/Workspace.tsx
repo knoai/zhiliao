@@ -121,8 +121,8 @@ export const WorkspacePage: React.FC = () => {
                   const doc = await createDoc.mutateAsync({})
                   await updateDoc.mutateAsync({ id: doc.id, data: { title, content } })
                   navigate(`/docs/${doc.id}`)
-                } catch (err: any) {
-                  show(err.message || '导入失败', 'error')
+                } catch (err) {
+                  show((err as Error).message || '导入失败', 'error')
                 } finally {
                   setImporting(false)
                 }

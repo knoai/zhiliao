@@ -55,7 +55,8 @@ export interface SlateNode {
   type?: string
   text?: string
   children?: SlateNode[]
-  [key: string]: any
+  id?: string
+  language?: string
 }
 
 export interface Doc {

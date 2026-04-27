@@ -41,8 +41,8 @@ export const LoginPage: React.FC = () => {
       if (success) {
         navigate('/workspace')
       }
-    } catch (err: any) {
-      const message = err?.response?.data?.detail || ''
+    } catch (err) {
+      const message = (err as any)?.response?.data?.detail || ''
       if (message.includes('该邮箱尚未注册')) {
         setError('该邮箱尚未注册，请检查或前往注册')
       } else if (message.includes('密码错误')) {
@@ -156,7 +156,7 @@ export const LoginPage: React.FC = () => {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors"
-                  tabIndex={-1}
+                  tabIndex={-1} aria-label="切换密码可见性"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -187,7 +187,7 @@ export const LoginPage: React.FC = () => {
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors"
-                  tabIndex={-1}
+                  tabIndex={-1} aria-label="切换密码可见性"
                 >
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>

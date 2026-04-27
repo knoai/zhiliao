@@ -117,7 +117,7 @@ export const MainLayout: React.FC = () => {
               {/* User Menu */}
               <div className="relative" ref={userMenuRef}>
                 <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  onClick={() => setShowUserMenu(!showUserMenu)} aria-label="用户菜单"
                   className="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <div className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center">

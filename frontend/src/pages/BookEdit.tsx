@@ -418,8 +418,8 @@ export const BookEditPage: React.FC = () => {
         const updatedChapters = await bookApi.getChapters(book.id)
         setChapters(updatedChapters)
         show(`成功导入 ${imported} 个章节`, 'success')
-      } catch (err: any) {
-        show(err.message || '导入失败', 'error')
+      } catch (err) {
+        show((err as Error).message || '导入失败', 'error')
       } finally {
         setImporting(false)
       }
@@ -558,15 +558,15 @@ export const BookEditPage: React.FC = () => {
                       setChapters(updatedChapters)
                       setCurrentChapter(newChapter)
                       setContent(content)
-                    } catch (err: any) {
-                      show(err.message || '导入失败', 'error')
+                    } catch (err) {
+                      show((err as Error).message || '导入失败', 'error')
                     } finally {
                       setImporting(false)
                     }
                   })
                 }
                 className="p-1 hover:bg-slate-200 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                title="导入章节"
+                title="导入章节" aria-label="导入章节"
               >
                 <Upload className={`w-4 h-4 text-slate-500 ${importing ? 'animate-spin' : ''}`} />
               </button>
@@ -574,7 +574,7 @@ export const BookEditPage: React.FC = () => {
                 disabled={importing}
                 onClick={() => handleImportFolder()}
                 className="p-1 hover:bg-slate-200 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                title="导入文件夹作为章节树"
+                title="导入文件夹作为章节树" aria-label="导入文件夹"
               >
                 <Folder className={`w-4 h-4 text-slate-500 ${importing ? 'animate-spin' : ''}`} />
               </button>
@@ -618,7 +618,7 @@ export const BookEditPage: React.FC = () => {
             <button
               onClick={() => setShowMobileSidebar(true)}
               className="p-2 rounded-lg border shadow-sm bg-white/80 border-slate-200 text-slate-600 hover:bg-white"
-              title="章节列表"
+              title="章节列表" aria-label="章节列表"
             >
               <Menu className="w-4 h-4" />
             </button>

@@ -50,14 +50,14 @@ export const DocSidebar: React.FC<DocSidebarProps> = ({
             <button
               onClick={onCreateDoc}
               className="p-1.5 hover:bg-gray-100 rounded text-gray-600"
-              title="新建文档"
+              title="新建文档" aria-label="新建文档"
             >
               <Plus className="w-4 h-4" />
             </button>
             <button
               onClick={onToggle}
               className="p-1.5 hover:bg-gray-100 rounded text-gray-600"
-              title="收起侧边栏"
+              title="收起侧边栏" aria-label="收起侧边栏"
             >
               <PanelLeft className="w-4 h-4" />
             </button>

@@ -142,9 +142,9 @@ export async function importFolder(files: File[]): Promise<ImportFolderNode> {
       try {
         const result = await importFile(node.file)
         node.content = result.content
-      } catch (err: any) {
+      } catch (err) {
         console.warn(`解析文件失败: ${node.path}`, err)
-        node.content = parsePlainTextToSlate(`[导入失败: ${err?.message || '未知错误'}]`)
+        node.content = parsePlainTextToSlate(`[导入失败: ${(err as Error).message || '未知错误'}]`)
       }
       return
     }

@@ -244,8 +244,8 @@ export const DocEditPage: React.FC = () => {
       setLastSaved(new Date())
       setSaveStatus('saved')
       localStorage.removeItem(`doc-draft-${id}`)
-    } catch (err: any) {
-      show(err.message || '导入失败', 'error')
+    } catch (err) {
+      show((err as Error).message || '导入失败', 'error')
     } finally {
       setImporting(false)
     }

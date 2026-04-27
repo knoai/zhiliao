@@ -80,7 +80,7 @@ export const DocEditHeader: React.FC<DocEditHeaderProps> = ({
         <button
           onClick={onToggleSidebar}
           className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg text-gray-600"
-          title="文档列表"
+          title="文档列表" aria-label="文档列表"
         >
           <Menu className="w-4 h-4" />
         </button>
@@ -88,7 +88,7 @@ export const DocEditHeader: React.FC<DocEditHeaderProps> = ({
           <button
             onClick={onToggleSidebar}
             className="hidden lg:block p-1.5 hover:bg-gray-100 rounded-lg text-gray-600 mr-1"
-            title="展开侧边栏"
+            title="展开侧边栏" aria-label="展开侧边栏"
           >
             <PanelLeft className="w-4 h-4" />
           </button>
@@ -135,7 +135,7 @@ export const DocEditHeader: React.FC<DocEditHeaderProps> = ({
         <button
           onClick={onToggleOutline}
           className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg text-gray-600"
-          title="大纲"
+          title="大纲" aria-label="大纲"
         >
           <PanelRight className="w-4 h-4" />
         </button>

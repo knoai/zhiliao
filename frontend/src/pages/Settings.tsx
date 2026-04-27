@@ -28,7 +28,7 @@ export const SettingsPage: React.FC = () => {
           show(res.message, 'success')
         })
         .catch((err) => {
-          show(err?.response?.data?.detail || '绑定失败', 'error')
+          show((err as any)?.response?.data?.detail || '绑定失败', 'error')
         })
         .finally(() => {
           setActionLoading(false)
@@ -41,8 +41,8 @@ export const SettingsPage: React.FC = () => {
     try {
       const { auth_url } = await feishuApi.getAuthUrl()
       window.location.href = auth_url
-    } catch (err: any) {
-      show(err?.response?.data?.detail || '获取授权链接失败', 'error')
+    } catch (err) {
+      show((err as any)?.response?.data?.detail || '获取授权链接失败', 'error')
     }
   }
 
@@ -51,8 +51,8 @@ export const SettingsPage: React.FC = () => {
     setActionLoading(true)
     try {
       await feishuUnbind.mutateAsync()
-    } catch (err: any) {
-      show(err?.response?.data?.detail || '解绑失败', 'error')
+    } catch (err) {
+      show((err as any)?.response?.data?.detail || '解绑失败', 'error')
     } finally {
       setActionLoading(false)
     }

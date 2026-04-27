@@ -22,6 +22,7 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({ icon, isActive, onClick, 
     type="button"
     onClick={onClick}
     title={title}
+    aria-label={title}
     className={`
       p-2 rounded hover:bg-gray-100 transition-colors
       ${isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}
@@ -147,8 +148,8 @@ const ImportButton: React.FC = () => {
         const { content } = await importFile(file)
         Transforms.insertFragment(editor, content)
         setShowMenu(false)
-      } catch (err: any) {
-        show(err.message || '导入失败', 'error')
+      } catch (err) {
+        show((err as Error).message || '导入失败', 'error')
       } finally {
         setImporting(false)
       }

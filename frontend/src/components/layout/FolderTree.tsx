@@ -67,6 +67,8 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
             <button
               onClick={(e) => toggleExpand(folder.id, e)}
               className="p-0.5 hover:bg-gray-200 rounded"
+              aria-label={isExpanded ? '折叠' : '展开'}
+              aria-expanded={isExpanded}
             >
               {isExpanded ? (
                 <ChevronDown className="w-3.5 h-3.5" />
@@ -97,6 +99,7 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
               }}
               className="p-1 hover:bg-gray-200 rounded"
               title="新建文档"
+              aria-label="新建文档"
             >
               <FileText className="w-3 h-3" />
             </button>
@@ -107,6 +110,7 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
               }}
               className="p-1 hover:bg-gray-200 rounded"
               title="新建子文件夹"
+              aria-label="新建子文件夹"
             >
               <Plus className="w-3 h-3" />
             </button>
