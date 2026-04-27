@@ -29,8 +29,8 @@ export function useDoc(id: string) {
 export function useCreateDoc() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: { title?: string; folder_id?: string; content?: any[] }) =>
-      docApi.create(data),
+    mutationFn: (data?: { title?: string; folder_id?: string; content?: any[] }) =>
+      docApi.create(data || {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: docsKeys.lists() })
     },

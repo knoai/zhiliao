@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useDocStore } from '../stores/docStore'
-import { useFolderStore } from '../stores/folderStore'
+import { useDocs, useDeleteDoc, useCreateDoc, useUpdateDoc } from '../hooks/useDocs'
+import { useFolders, useCreateFolder, useDeleteFolder } from '../hooks/useFolders'
 import { MoveToFolderModal } from '../components/common/MoveToFolderModal'
 import { FolderTree } from '../components/layout/FolderTree'
 import { format } from 'date-fns'
@@ -15,28 +15,24 @@ export const DocListPage: React.FC = () => {
   const folderId = searchParams.get('folder')
   const statusFilter = searchParams.get('status')
 
-  const { docs, isLoading, fetchDocs, deleteDoc, updateDoc, createDoc } = useDocStore()
-  const { folders, fetchFolders, createFolder, deleteFolder } = useFolderStore()
+  const { data: docs = [], isLoading } = useDocs({ folderId: folderId || undefined, status: statusFilter || undefined })
+  const { data: folders = [] } = useFolders()
+  const deleteDoc = useDeleteDoc()
+  const createDoc = useCreateDoc()
+  const updateDoc = useUpdateDoc()
+  const createFolder = useCreateFolder()
+  const deleteFolder = useDeleteFolder()
   const [searchKeyword, setSearchKeyword] = useState('')
 
   // Move modal state
   const [moveModalOpen, setMoveModalOpen] = useState(false)
   const [movingDoc, setMovingDoc] = useState<{ id: string; title: string; folder_id?: string } | null>(null)
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; doc: typeof movingDoc } | null>(null)
 
   // Folder modal state
   const [showCreateFolder, setShowCreateFolder] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
   const [parentFolderId, setParentFolderId] = useState<string | undefined>()
   const [importing, setImporting] = useState(false)
-
-  useEffect(() => {
-    fetchFolders()
-  }, [fetchFolders])
-
-  useEffect(() => {
-    fetchDocs(folderId || undefined, statusFilter || undefined)
-  }, [fetchDocs, folderId, statusFilter])
 
   const filteredDocs = docs.filter((doc) => {
     if (!searchKeyword) return true
@@ -54,7 +50,7 @@ export const DocListPage: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (confirm('确定要删除这篇文档吗？')) {
-      await deleteDoc(id)
+      deleteDoc.mutate(id)
     }
   }
 
@@ -65,19 +61,18 @@ export const DocListPage: React.FC = () => {
 
   const handleMoveConfirm = async (targetFolderId: string | null) => {
     if (!movingDoc) return
-    await updateDoc(movingDoc.id, { folder_id: targetFolderId || undefined })
-    fetchDocs(folderId || undefined, statusFilter || undefined)
+    updateDoc.mutate({ id: movingDoc.id, data: { folder_id: targetFolderId || undefined } })
     setMovingDoc(null)
   }
 
   const handleCreateDoc = async (folderId?: string) => {
-    const doc = await createDoc(folderId)
+    const doc = await createDoc.mutateAsync({ folder_id: folderId })
     navigate(`/docs/${doc.id}`)
   }
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return
-    await createFolder(newFolderName, parentFolderId)
+    createFolder.mutate({ name: newFolderName, parentId: parentFolderId })
     setNewFolderName('')
     setParentFolderId(undefined)
     setShowCreateFolder(false)
@@ -90,7 +85,7 @@ export const DocListPage: React.FC = () => {
 
   const handleDeleteFolder = async (id: string) => {
     if (confirm('确定要删除此文件夹吗？其中的文档将被移动到根目录。')) {
-      await deleteFolder(id)
+      deleteFolder.mutate(id)
     }
   }
 
@@ -211,8 +206,8 @@ export const DocListPage: React.FC = () => {
                     setImporting(true)
                     try {
                       const { title, content } = await importFile(file)
-                      const doc = await createDoc(folderId || undefined)
-                      await updateDoc(doc.id, { title, content })
+                      const doc = await createDoc.mutateAsync({ folder_id: folderId || undefined })
+                      await updateDoc.mutateAsync({ id: doc.id, data: { title, content } })
                       navigate(`/docs/${doc.id}`)
                     } catch (err: any) {
                       alert(err.message || '导入失败')

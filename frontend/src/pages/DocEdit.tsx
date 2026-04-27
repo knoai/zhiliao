@@ -18,6 +18,7 @@ import {
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { docApi } from '../api/doc'
+import { useDoc, useDocs, useCreateDoc, useUpdateDoc, useDeleteDoc } from '../hooks/useDocs'
 import type { DocVersion } from '../types'
 import { importFile } from '../utils/importUtils'
 
@@ -37,8 +38,13 @@ interface DocDraft {
 export const DocEditPage: React.FC = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const { currentDoc, docs, fetchDoc, fetchDocs, createDoc, updateDoc, deleteDoc, readMode, toggleReadMode } = useDocStore()
+  const { readMode, toggleReadMode } = useDocStore()
   const { user } = useAuthStore()
+  const { data: docs = [] } = useDocs()
+  const { data: docData } = useDoc(id || '')
+  const createDocMut = useCreateDoc()
+  const updateDocMut = useUpdateDoc()
+  const deleteDocMut = useDeleteDoc()
 
   const [title, setTitle] = useState('')
   const [content, setContent] = useState<Descendant[]>(DEFAULT_CONTENT)
@@ -74,45 +80,40 @@ export const DocEditPage: React.FC = () => {
 
   // Load document and docs list
   useEffect(() => {
-    fetchDocs()
-
-    if (id) {
-      fetchDoc(id).then((doc) => {
-        if (doc) {
-          // 尝试恢复本地草稿
-          const draftRaw = localStorage.getItem(`doc-draft-${id}`)
-          if (draftRaw) {
-            try {
-              const draft: DocDraft = JSON.parse(draftRaw)
-              setTitle(draft.title || doc.title || '无标题文档')
-              const draftContent = draft.content
-              if (Array.isArray(draftContent) && draftContent.length > 0) {
-                setContent(draftContent as Descendant[])
-              } else {
-                const docContent = doc.content
-                setContent(Array.isArray(docContent) && docContent.length > 0 ? docContent as Descendant[] : DEFAULT_CONTENT)
-              }
-            } catch {
-              // 草稿解析失败，回退到服务器数据
-              setTitle(doc.title || '无标题文档')
-              const docContent = doc.content
-              setContent(Array.isArray(docContent) && docContent.length > 0 ? docContent as Descendant[] : DEFAULT_CONTENT)
-            }
-          } else {
-            setTitle(doc.title || '无标题文档')
-            const docContent = doc.content
-            setContent(Array.isArray(docContent) && docContent.length > 0 ? docContent as Descendant[] : DEFAULT_CONTENT)
-          }
-          setStatus(doc.status || 'draft')
-          setLastSaved(new Date(doc.updated_at))
-        }
-      })
-    } else {
-      createDoc().then((doc) => {
+    if (!id) {
+      createDocMut.mutateAsync({}).then((doc) => {
         navigate(`/docs/${doc.id}`, { replace: true })
       })
+      return
     }
-  }, [id])
+    if (docData) {
+      // 尝试恢复本地草稿
+      const draftRaw = localStorage.getItem(`doc-draft-${id}`)
+      if (draftRaw) {
+        try {
+          const draft: DocDraft = JSON.parse(draftRaw)
+          setTitle(draft.title || docData?.title || '无标题文档')
+          const draftContent = draft.content
+          if (Array.isArray(draftContent) && draftContent.length > 0) {
+            setContent(draftContent as Descendant[])
+          } else {
+            const docContent = docData?.content
+            setContent(Array.isArray(docContent) && docContent.length > 0 ? docContent as Descendant[] : DEFAULT_CONTENT)
+          }
+        } catch {
+          setTitle(docData?.title || '无标题文档')
+          const docContent = docData?.content
+          setContent(Array.isArray(docContent) && docContent.length > 0 ? docContent as Descendant[] : DEFAULT_CONTENT)
+        }
+      } else {
+        setTitle(docData?.title || '无标题文档')
+        const docContent = docData?.content
+        setContent(Array.isArray(docContent) && docContent.length > 0 ? docContent as Descendant[] : DEFAULT_CONTENT)
+      }
+      setStatus(docData?.status || 'draft')
+      setLastSaved(new Date(docData?.updated_at))
+    }
+  }, [id, docData])
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -137,7 +138,7 @@ export const DocEditPage: React.FC = () => {
         }
         return node
       })
-      await updateDoc(id, { title, content: cleanContent })
+      await updateDocMut.mutateAsync({ id, data: { title, content: cleanContent } })
       setLastSaved(new Date())
       setSaveStatus('saved')
       // 保存成功后清除本地草稿
@@ -146,7 +147,7 @@ export const DocEditPage: React.FC = () => {
       console.error('保存失败:', error)
       setSaveStatus('error')
     }
-  }, [id, title, content, updateDoc])
+  }, [id, title, content, updateDocMut])
 
   const saveDraft = useCallback(() => {
     if (!id) return
@@ -205,20 +206,20 @@ export const DocEditPage: React.FC = () => {
   const handlePublish = async () => {
     if (!id) return
     await saveDoc()
-    await updateDoc(id, { status: 'published' })
+    await updateDocMut.mutateAsync({ id, data: { status: 'published' } })
     setStatus('published')
   }
 
   const handleUnpublish = async () => {
     if (!id) return
-    await updateDoc(id, { status: 'draft' })
+    await updateDocMut.mutateAsync({ id, data: { status: 'draft' } })
     setStatus('draft')
   }
 
   const handleDelete = async () => {
     if (!id) return
     if (confirm('确定要删除这篇文档吗？')) {
-      await deleteDoc(id)
+      await deleteDocMut.mutateAsync(id)
       navigate('/docs')
     }
   }
@@ -231,7 +232,7 @@ export const DocEditPage: React.FC = () => {
   }
 
   const handleCreateNewDoc = async () => {
-    const doc = await createDoc()
+    const doc = await createDocMut.mutateAsync({})
     navigate(`/docs/${doc.id}`)
   }
 
@@ -243,7 +244,7 @@ export const DocEditPage: React.FC = () => {
       const { title: importTitle, content: importContent } = await importFile(file)
       setTitle(importTitle)
       setContent(importContent)
-      await updateDoc(id, { title: importTitle, content: importContent })
+      await updateDocMut.mutateAsync({ id, data: { title: importTitle, content: importContent } })
       setLastSaved(new Date())
       setSaveStatus('saved')
       localStorage.removeItem(`doc-draft-${id}`)
@@ -316,9 +317,9 @@ export const DocEditPage: React.FC = () => {
           {/* Footer Info - always show at bottom of paper */}
           <DocFooter
             author={user?.username || '-'}
-            createdAt={currentDoc?.created_at}
-            updatedAt={currentDoc?.updated_at}
-            wordCount={currentDoc?.word_count}
+            createdAt={docData?.created_at}
+            updatedAt={docData?.updated_at}
+            wordCount={docData?.word_count}
           />
         </DocCanvas>
 
@@ -328,9 +329,9 @@ export const DocEditPage: React.FC = () => {
             content={content}
             readMode={readMode}
             author={user?.username}
-            createdAt={currentDoc?.created_at}
-            updatedAt={currentDoc?.updated_at}
-            wordCount={currentDoc?.word_count}
+            createdAt={docData?.created_at}
+            updatedAt={docData?.updated_at}
+            wordCount={docData?.word_count}
           />
         </div>
 
@@ -346,9 +347,9 @@ export const DocEditPage: React.FC = () => {
                 content={content}
                 readMode={readMode}
                 author={user?.username}
-                createdAt={currentDoc?.created_at}
-                updatedAt={currentDoc?.updated_at}
-                wordCount={currentDoc?.word_count}
+                createdAt={docData?.created_at}
+                updatedAt={docData?.updated_at}
+                wordCount={docData?.word_count}
               />
             </div>
           </>
@@ -418,7 +419,7 @@ export const DocEditPage: React.FC = () => {
               <span>{previewVersion.word_count} 字</span>
             </div>
             <div className="border border-gray-200 rounded-lg p-6 bg-white max-h-[60vh] overflow-y-auto">
-              <h1 className="text-2xl font-bold mb-4">{currentDoc?.title || '历史版本'}</h1>
+              <h1 className="text-2xl font-bold mb-4">{docData?.title || '历史版本'}</h1>
               <SlateRenderer content={previewVersion.content as Descendant[]} />
             </div>
           </div>

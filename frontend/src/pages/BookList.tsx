@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   BookOpen, 
@@ -11,40 +11,19 @@ import {
   FileText,
   ArrowLeft
 } from 'lucide-react'
-import { bookApi } from '../api/book'
-import type { BookListItem } from '../types'
+import { useBooks, useDeleteBook } from '../hooks/useBooks'
 import { formatRelativeTime } from '../utils/date'
 
 export const BookListPage: React.FC = () => {
   const navigate = useNavigate()
-  const [books, setBooks] = useState<BookListItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: books = [], isLoading: loading } = useBooks()
+  const deleteBook = useDeleteBook()
   const [keyword, setKeyword] = useState('')
   const [showMenu, setShowMenu] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadBooks()
-  }, [])
-
-  const loadBooks = async () => {
-    try {
-      const data = await bookApi.getList()
-      setBooks(data)
-    } catch (error) {
-      console.error('加载书籍失败:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleDelete = async (id: string) => {
     if (!confirm('确定要删除这本书吗？所有章节也将被删除。')) return
-    try {
-      await bookApi.delete(id)
-      setBooks(books.filter(b => b.id !== id))
-    } catch (error) {
-      console.error('删除失败:', error)
-    }
+    deleteBook.mutate(id)
     setShowMenu(null)
   }
 
