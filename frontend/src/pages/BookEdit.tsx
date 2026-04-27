@@ -19,6 +19,7 @@ import {
 import { EmptyState } from '../components/ui/EmptyState'
 import { SlateEditor } from '../components/editor/SlateEditor'
 import { bookApi } from '../api/book'
+import { useBook, useUpdateBook, useBookChapters } from '../hooks/useBooks'
 import { Descendant } from 'slate'
 import type { Book, Chapter, ChapterTree } from '../types'
 import { importFile, triggerFileSelect } from '../utils/importUtils'
@@ -170,7 +171,9 @@ export const BookEditPage: React.FC = () => {
   // 通过路径判断是否为新建模式
   const isNew = location.pathname.endsWith('/new') || id === 'new'
 
-  const [book, setBook] = useState<Book | null>(null)
+  const { data: bookData, isLoading: bookLoading } = useBook(id || '')
+  const { data: serverChapters = [] } = useBookChapters(id || '')
+  const updateBookMut = useUpdateBook()
   const [chapters, setChapters] = useState<ChapterTree[]>([])
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null)
   const [content, setContent] = useState<Descendant[]>(DEFAULT_CONTENT)
@@ -185,6 +188,15 @@ export const BookEditPage: React.FC = () => {
   const [toolbarVisible, setToolbarVisible] = useState(true)
   const [showMobileSidebar, setShowMobileSidebar] = useState(false)
 
+  const book = bookData || null
+
+  // 同步服务器 chapters 到本地 state
+  useEffect(() => {
+    if (serverChapters.length > 0) {
+      setChapters(serverChapters)
+    }
+  }, [serverChapters])
+
   // 加载书籍和章节
   useEffect(() => {
     console.log('BookEdit: id=', id, 'isNew=', isNew)
@@ -192,8 +204,31 @@ export const BookEditPage: React.FC = () => {
       setLoading(false)
       return
     }
-    loadBook()
-  }, [id])
+    if (bookData) {
+      setTitle(bookData.title)
+      setDescription(bookData.description)
+      const bookChapters = bookData.chapters || []
+      setChapters(bookChapters)
+      
+      // 默认展开所有
+      const allIds = new Set<string>()
+      const collectIds = (list: ChapterTree[]) => {
+        list.forEach(ch => {
+          allIds.add(ch.id)
+          if (ch.children) collectIds(ch.children)
+        })
+      }
+      collectIds(bookChapters)
+      setExpandedIds(allIds)
+      
+      // 默认选中第一个有内容的章节
+      const firstContentChapter = findFirstWithContent(bookChapters)
+      if (firstContentChapter) {
+        loadChapter(firstContentChapter.id)
+      }
+      setLoading(false)
+    }
+  }, [id, bookData, isNew])
 
   // 超时强制停止 loading
   useEffect(() => {
@@ -205,38 +240,6 @@ export const BookEditPage: React.FC = () => {
     }, 3000)
     return () => clearTimeout(timer)
   }, [])
-
-  const loadBook = async () => {
-    if (!id) return
-    try {
-      const bookData = await bookApi.getById(id)
-      setBook(bookData)
-      setTitle(bookData.title)
-      setDescription(bookData.description)
-      setChapters(bookData.chapters || [])
-      
-      // 默认展开所有
-      const allIds = new Set<string>()
-      const collectIds = (list: ChapterTree[]) => {
-        list.forEach(ch => {
-          allIds.add(ch.id)
-          if (ch.children) collectIds(ch.children)
-        })
-      }
-      collectIds(bookData.chapters || [])
-      setExpandedIds(allIds)
-      
-      // 默认选中第一个有内容的章节
-      const firstContentChapter = findFirstWithContent(bookData.chapters || [])
-      if (firstContentChapter) {
-        loadChapter(firstContentChapter.id)
-      }
-    } catch (error) {
-      console.error('加载书籍失败:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const findFirstWithContent = (list: ChapterTree[]): ChapterTree | null => {
     for (const ch of list) {
@@ -284,7 +287,7 @@ export const BookEditPage: React.FC = () => {
     if (!book) return
     setSaving(true)
     try {
-      await bookApi.update(book.id, { title, description })
+      await updateBookMut.mutateAsync({ id: book.id, data: { title, description } })
     } catch (error) {
       console.error('保存失败:', error)
     } finally {
