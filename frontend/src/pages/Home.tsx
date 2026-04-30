@@ -8,7 +8,9 @@ import {
   Layout,
   Users,
   Zap,
-  ArrowRight
+  ArrowRight,
+  Globe,
+  Compass
 } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 
@@ -31,6 +33,20 @@ export const HomePage: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/public/books')}
+                className="hidden sm:flex items-center gap-1.5 text-slate-600 hover:text-amber-600 px-3 py-2 text-sm font-medium transition-colors"
+              >
+                <BookOpen className="w-4 h-4" />
+                公开书籍
+              </button>
+              <button
+                onClick={() => navigate('/public/docs')}
+                className="hidden sm:flex items-center gap-1.5 text-slate-600 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                公开文档
+              </button>
               {isAuthenticated ? (
                 <button
                   onClick={() => navigate('/workspace')}
@@ -256,6 +272,48 @@ export const HomePage: React.FC = () => {
                 标签、文件夹、全文搜索，高效组织海量内容
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Public Content Section */}
+      <section className="py-24 bg-white border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">
+              探索公开内容
+            </h2>
+            <p className="text-lg text-slate-600">
+              无需登录，浏览社区分享的优质书籍和文档
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            <button
+              onClick={() => navigate('/public/books')}
+              className="group flex items-center gap-5 p-6 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 rounded-2xl hover:shadow-lg transition-all text-left"
+            >
+              <div className="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <BookOpen className="w-7 h-7 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-1">公开书籍</h3>
+                <p className="text-sm text-slate-600">浏览社区分享的优质知识库和结构化书籍</p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-amber-400 ml-auto group-hover:translate-x-1 transition-transform" />
+            </button>
+            <button
+              onClick={() => navigate('/public/docs')}
+              className="group flex items-center gap-5 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl hover:shadow-lg transition-all text-left"
+            >
+              <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <FileText className="w-7 h-7 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-1">公开文档</h3>
+                <p className="text-sm text-slate-600">发现和阅读社区分享的精彩文章和笔记</p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-blue-400 ml-auto group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         </div>
       </section>

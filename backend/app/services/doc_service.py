@@ -73,7 +73,8 @@ class DocService:
             title=data.title,
             content=content,
             word_count=word_count,
-            sort_order=max_sort + 1
+            sort_order=max_sort + 1,
+            visibility=data.visibility
         )
         
         db.add(doc)
@@ -176,6 +177,9 @@ class DocService:
             else:
                 doc.published_at = None
         
+        if data.visibility is not None:
+            doc.visibility = data.visibility
+        
         await db.commit()
         await db.refresh(doc)
         
@@ -251,6 +255,38 @@ class DocService:
         await db.refresh(doc)
         
         return doc
+    
+    @staticmethod
+    async def get_public_list(
+        db: AsyncSession,
+        keyword: Optional[str] = None
+    ) -> list[Doc]:
+        """获取公开文档列表"""
+        query = select(Doc).where(
+            and_(Doc.visibility == "public", Doc.is_deleted == False)
+        )
+        
+        if keyword:
+            query = query.where(Doc.title.ilike(f"%{keyword}%"))
+        
+        query = query.order_by(desc(Doc.updated_at))
+        
+        result = await db.execute(query)
+        return list(result.scalars().all())
+    
+    @staticmethod
+    async def get_public_by_id(db: AsyncSession, doc_id: UUID) -> Optional[Doc]:
+        """获取公开文档详情"""
+        result = await db.execute(
+            select(Doc).where(
+                and_(
+                    Doc.id == doc_id,
+                    Doc.visibility == "public",
+                    Doc.is_deleted == False
+                )
+            )
+        )
+        return result.scalar_one_or_none()
     
     @staticmethod
     async def get_versions(db: AsyncSession, user_id: UUID, doc_id: UUID) -> list[DocVersion]:

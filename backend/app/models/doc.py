@@ -23,6 +23,9 @@ class Doc(Base):
     status = Column(String(20), default="draft", index=True)
     published_at = Column(DateTime(timezone=True), nullable=True)
     
+    # 可见性: private(私密), public(公开)
+    visibility = Column(String(20), default="private", index=True)
+    
     # 软删除
     is_deleted = Column(Boolean, default=False, index=True)
     deleted_at = Column(DateTime(timezone=True), nullable=True)

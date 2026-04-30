@@ -68,6 +68,7 @@ export interface Doc {
   word_count: number
   tags: string[]
   status: 'draft' | 'published'
+  visibility: 'private' | 'public'
   published_at?: string
   version: number
   sort_order: number
@@ -82,8 +83,13 @@ export interface DocListItem {
   word_count: number
   tags: string[]
   status: 'draft' | 'published'
+  visibility: 'private' | 'public'
   sort_order: number
   updated_at: string
+}
+
+export interface PublicDocListItem extends DocListItem {
+  author_name: string
 }
 
 export interface DocVersion {
@@ -107,6 +113,7 @@ export interface UpdateDocData {
   folder_id?: string
   tags?: string[]
   status?: 'draft' | 'published'
+  visibility?: 'private' | 'public'
 }
 
 export interface SortUpdateData {

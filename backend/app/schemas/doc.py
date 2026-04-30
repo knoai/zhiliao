@@ -15,6 +15,7 @@ class DocBase(BaseModel):
 class DocCreate(DocBase):
     folder_id: Optional[UUID] = None
     content: Optional[List[SlateNode]] = None
+    visibility: str = Field(default="private", pattern="^(private|public)$")
 
 
 class DocUpdate(BaseModel):
@@ -23,6 +24,7 @@ class DocUpdate(BaseModel):
     folder_id: Optional[UUID] = None
     tags: Optional[List[str]] = None
     status: Optional[str] = None  # draft, published
+    visibility: Optional[str] = Field(None, pattern="^(private|public)$")
 
 
 class DocStatusUpdate(BaseModel):
@@ -42,6 +44,7 @@ class DocResponse(DocBase):
     word_count: int
     tags: List[str]
     status: str
+    visibility: str
     published_at: Optional[datetime] = None
     version: int
     sort_order: int
@@ -60,11 +63,22 @@ class DocListItem(BaseModel):
     word_count: int
     tags: List[str]
     status: str
+    visibility: str
     sort_order: int
     updated_at: datetime
     
     class Config:
         from_attributes = True
+
+
+class PublicDocListItem(DocListItem):
+    """公开文档列表项（含作者信息）"""
+    author_name: str
+
+
+class PublicDocResponse(DocResponse):
+    """公开文档详情（含作者信息）"""
+    author_name: str
 
 
 class DocVersionResponse(BaseModel):

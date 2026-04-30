@@ -11,6 +11,9 @@ import { DocEditPage } from './pages/DocEdit'
 import { BookListPage } from './pages/BookList'
 import { BookEditPage } from './pages/BookEdit'
 import { PublicBookReadPage } from './pages/PublicBookReadPage'
+import { PublicBookListPage } from './pages/PublicBookListPage'
+import { PublicDocListPage } from './pages/PublicDocListPage'
+import { PublicDocReadPage } from './pages/PublicDocReadPage'
 import { MainLayout } from './components/layout/MainLayout'
 import { ToastProvider } from './components/ui/Toast'
 
@@ -124,8 +127,17 @@ function App() {
         <Route index element={<SettingsPage />} />
       </Route>
 
+      {/* 公开书籍列表 - 无需登录 */}
+      <Route path="/public/books" element={<PublicBookListPage />} />
+
       {/* 公开书籍阅读页 - 无需登录 */}
       <Route path="/public/books/:id" element={<PublicBookReadPage />} />
+
+      {/* 公开文档列表 - 无需登录 */}
+      <Route path="/public/docs" element={<PublicDocListPage />} />
+
+      {/* 公开文档阅读页 - 无需登录 */}
+      <Route path="/public/docs/:id" element={<PublicDocReadPage />} />
 
       {/* 默认重定向 */}
       <Route path="*" element={<Navigate to="/" replace />} />

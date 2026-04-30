@@ -1,11 +1,21 @@
 import request from './request'
-import type { Doc, DocListItem, DocVersion, CreateDocData, UpdateDocData, SortUpdateData } from '@/types'
+import type { Doc, DocListItem, DocVersion, CreateDocData, UpdateDocData, SortUpdateData, PublicDocListItem } from '@/types'
 
 export const docApi = {
   getList(folderId?: string, status?: string, keyword?: string): Promise<DocListItem[]> {
     return request.get('/docs', {
       params: { folder_id: folderId, status, keyword },
     })
+  },
+
+  getPublicList(keyword?: string): Promise<PublicDocListItem[]> {
+    return request.get('/docs/public', {
+      params: { keyword },
+    })
+  },
+
+  getPublicById(id: string): Promise<Doc> {
+    return request.get(`/docs/public/${id}`)
   },
 
   create(data: CreateDocData): Promise<Doc> {

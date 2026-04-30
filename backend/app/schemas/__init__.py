@@ -8,7 +8,8 @@ from app.schemas.folder import (
 )
 from app.schemas.doc import (
     DocCreate, DocUpdate, DocResponse, DocListItem, DocVersionResponse,
-    DocStatusUpdate, DocSortUpdate
+    DocStatusUpdate, DocSortUpdate,
+    PublicDocListItem, PublicDocResponse
 )
 from app.schemas.book import (
     BookCreate, BookUpdate, BookResponse, BookListItem,
@@ -23,6 +24,7 @@ __all__ = [
     "FolderCreate", "FolderUpdate", "FolderResponse", "FolderTree", "FolderSortUpdate",
     "DocCreate", "DocUpdate", "DocResponse", "DocListItem", "DocVersionResponse",
     "DocStatusUpdate", "DocSortUpdate",
+    "PublicDocListItem", "PublicDocResponse",
     "BookCreate", "BookUpdate", "BookResponse", "BookListItem",
     "PublicBookListItem", "PublicBookResponse",
     "ChapterCreate", "ChapterUpdate", "ChapterResponse", "ChapterTree", "ChapterSortUpdate"
