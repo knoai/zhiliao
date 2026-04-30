@@ -126,6 +126,18 @@ export function buildFolderTree(files: File[]): ImportFolderNode {
     })
   }
 
+  // 默认排序：文件夹在前，文件在后；同类型按名称字母顺序
+  function sortNodeChildren(node: ImportFolderNode): void {
+    node.children.sort((a, b) => {
+      if (a.type === b.type) {
+        return a.name.localeCompare(b.name)
+      }
+      return a.type === 'folder' ? -1 : 1
+    })
+    node.children.forEach(sortNodeChildren)
+  }
+  sortNodeChildren(root)
+
   return root
 }
 

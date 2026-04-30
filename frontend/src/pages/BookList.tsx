@@ -78,26 +78,41 @@ export const BookListPage: React.FC = () => {
         // 1. 创建书籍
         const book = await createBook.mutateAsync({ title: bookTitle })
 
-        // 2. 递归创建章节
+        // 2. 递归创建章节（单章节失败不中断整体导入）
         let imported = 0
+        let failed = 0
         const importNode = async (node: ImportFolderNode, parentChapterId?: string) => {
           if (node.type === 'file') {
-            await bookApi.createChapter(book.id, {
-              title: node.name,
-              content: node.content,
-              parent_id: parentChapterId,
-            })
-            imported++
+            try {
+              await bookApi.createChapter(book.id, {
+                title: node.name,
+                content: node.content,
+                parent_id: parentChapterId,
+              })
+              imported++
+              console.log(`[导入] 创建文件章节成功: ${node.name}`)
+            } catch (err: any) {
+              failed++
+              console.error(`[导入] 创建文件章节失败: ${node.name}`, err.response?.data || err.message)
+            }
             return
           }
           let currentChapterId = parentChapterId
           // 根节点 name 为空，跳过；有名字的子文件夹创建为章节（空内容，作为父级）
           if (node.name) {
-            const chapter = await bookApi.createChapter(book.id, {
-              title: node.name,
-              parent_id: parentChapterId,
-            })
-            currentChapterId = chapter.id
+            try {
+              const chapter = await bookApi.createChapter(book.id, {
+                title: node.name,
+                parent_id: parentChapterId,
+              })
+              currentChapterId = chapter.id
+              imported++
+              console.log(`[导入] 创建文件夹章节成功: ${node.name}`)
+            } catch (err: any) {
+              failed++
+              console.error(`[导入] 创建文件夹章节失败: ${node.name}`, err.response?.data || err.message)
+              return // 父章节创建失败，跳过其子节点
+            }
           }
           for (const child of node.children) {
             await importNode(child, currentChapterId)
@@ -106,7 +121,11 @@ export const BookListPage: React.FC = () => {
 
         await importNode(tree)
         queryClient.invalidateQueries({ queryKey: ['books'] })
-        show(`成功导入书籍「${bookTitle}」，共 ${imported} 个章节`, 'success')
+        if (failed > 0) {
+          show(`导入完成，成功 ${imported} 个章节，失败 ${failed} 个`, 'error')
+        } else {
+          show(`成功导入书籍「${bookTitle}」，共 ${imported} 个章节`, 'success')
+        }
         navigate(`/books/${book.id}`)
       } catch (err) {
         show((err as Error).message || '导入失败', 'error')
