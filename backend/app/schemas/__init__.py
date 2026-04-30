@@ -12,6 +12,7 @@ from app.schemas.doc import (
 )
 from app.schemas.book import (
     BookCreate, BookUpdate, BookResponse, BookListItem,
+    PublicBookListItem, PublicBookResponse,
     ChapterCreate, ChapterUpdate, ChapterResponse, ChapterTree, ChapterSortUpdate
 )
 
@@ -23,5 +24,6 @@ __all__ = [
     "DocCreate", "DocUpdate", "DocResponse", "DocListItem", "DocVersionResponse",
     "DocStatusUpdate", "DocSortUpdate",
     "BookCreate", "BookUpdate", "BookResponse", "BookListItem",
+    "PublicBookListItem", "PublicBookResponse",
     "ChapterCreate", "ChapterUpdate", "ChapterResponse", "ChapterTree", "ChapterSortUpdate"
 ]

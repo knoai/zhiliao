@@ -10,6 +10,7 @@ import { DocListPage } from './pages/DocList'
 import { DocEditPage } from './pages/DocEdit'
 import { BookListPage } from './pages/BookList'
 import { BookEditPage } from './pages/BookEdit'
+import { PublicBookReadPage } from './pages/PublicBookReadPage'
 import { MainLayout } from './components/layout/MainLayout'
 import { ToastProvider } from './components/ui/Toast'
 
@@ -122,6 +123,9 @@ function App() {
       >
         <Route index element={<SettingsPage />} />
       </Route>
+
+      {/* 公开书籍阅读页 - 无需登录 */}
+      <Route path="/public/books/:id" element={<PublicBookReadPage />} />
 
       {/* 默认重定向 */}
       <Route path="*" element={<Navigate to="/" replace />} />

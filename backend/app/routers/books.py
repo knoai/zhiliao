@@ -7,6 +7,7 @@ from app.database import get_db
 from app.models import User
 from app.schemas import (
     BookCreate, BookUpdate, BookResponse, BookListItem,
+    PublicBookListItem, PublicBookResponse,
     ChapterCreate, ChapterUpdate, ChapterResponse, ChapterTree, ChapterSortUpdate
 )
 from app.services.book_service import BookService
@@ -41,6 +42,108 @@ async def create_book(
     book = await BookService.create_book(db, current_user.id, data)
     return book
 
+
+# ==================== Public Routes ====================
+
+@router.get("/public", response_model=List[PublicBookListItem])
+async def get_public_books(
+    keyword: Optional[str] = Query(None, description="搜索关键词"),
+    db: AsyncSession = Depends(get_db)
+):
+    """获取公开书籍列表（无需登录）"""
+    from sqlalchemy import select
+    
+    books = await BookService.get_public_book_list(db, keyword=keyword)
+    
+    # 获取作者信息
+    result = await db.execute(select(User))
+    users = {u.id: u.username for u in result.scalars().all()}
+    
+    return [
+        {
+            "id": book.id,
+            "title": book.title,
+            "description": book.description,
+            "cover_image": book.cover_image,
+            "visibility": book.visibility,
+            "status": book.status,
+            "word_count": book.word_count,
+            "read_count": book.read_count,
+            "created_at": book.created_at,
+            "updated_at": book.updated_at,
+            "author_name": users.get(book.user_id, "未知作者")
+        }
+        for book in books
+    ]
+
+
+@router.get("/public/{book_id}", response_model=PublicBookResponse)
+async def get_public_book(
+    book_id: UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    """获取公开书籍详情（含章节树，无需登录）"""
+    from sqlalchemy import select
+    
+    book = await BookService.get_public_book_by_id(db, book_id)
+    if not book:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="书籍不存在或未公开"
+        )
+    
+    # 获取作者名
+    result = await db.execute(select(User).where(User.id == book.user_id))
+    user = result.scalar_one_or_none()
+    author_name = user.username if user else "未知作者"
+    
+    # 获取章节树
+    chapter_tree = await BookService.get_public_chapter_tree(db, book_id)
+    
+    return {
+        "id": book.id,
+        "title": book.title,
+        "description": book.description,
+        "cover_image": book.cover_image,
+        "visibility": book.visibility,
+        "status": book.status,
+        "word_count": book.word_count,
+        "read_count": book.read_count,
+        "chapters": chapter_tree,
+        "created_at": book.created_at,
+        "updated_at": book.updated_at,
+        "published_at": book.published_at,
+        "author_name": author_name
+    }
+
+
+@router.get("/public/{book_id}/chapters", response_model=List[ChapterTree])
+async def get_public_chapters(
+    book_id: UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    """获取公开书籍的章节树（无需登录）"""
+    chapters = await BookService.get_public_chapter_tree(db, book_id)
+    return chapters
+
+
+@router.get("/public/{book_id}/chapters/{chapter_id}", response_model=ChapterResponse)
+async def get_public_chapter(
+    book_id: UUID,
+    chapter_id: UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    """获取公开书籍的章节详情（无需登录）"""
+    chapter = await BookService.get_public_chapter(db, book_id, chapter_id)
+    if not chapter:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="章节不存在"
+        )
+    return chapter
+
+
+# ==================== Book Routes ====================
 
 @router.get("/{book_id}", response_model=BookResponse)
 async def get_book(

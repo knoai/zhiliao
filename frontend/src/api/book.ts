@@ -29,6 +29,26 @@ export const bookApi = {
     return request.delete(`/books/${id}`)
   },
 
+  // ==================== Public Book APIs (no auth required) ====================
+
+  getPublicList(keyword?: string): Promise<BookListItem[]> {
+    return request.get('/books/public', {
+      params: { keyword },
+    })
+  },
+
+  getPublicById(id: string): Promise<Book> {
+    return request.get(`/books/public/${id}`)
+  },
+
+  getPublicChapters(bookId: string): Promise<ChapterTree[]> {
+    return request.get(`/books/public/${bookId}/chapters`)
+  },
+
+  getPublicChapter(bookId: string, chapterId: string): Promise<Chapter> {
+    return request.get(`/books/public/${bookId}/chapters/${chapterId}`)
+  },
+
   // ==================== Chapter APIs ====================
 
   getChapters(bookId: string): Promise<ChapterTree[]> {

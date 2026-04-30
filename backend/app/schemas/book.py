@@ -63,6 +63,26 @@ class BookResponse(BookBase):
         from_attributes = True
 
 
+class PublicBookListItem(BookListItem):
+    """公开书籍列表项（含作者信息）"""
+    author_name: str
+
+
+class PublicBookResponse(BookBase):
+    """公开书籍详情（含作者信息，不含敏感字段）"""
+    id: UUID
+    cover_image: Optional[str] = None
+    visibility: str
+    status: str
+    word_count: int
+    read_count: int
+    chapters: List["ChapterTree"] = []
+    created_at: datetime
+    updated_at: datetime
+    published_at: Optional[datetime] = None
+    author_name: str
+
+
 # ==================== Chapter Schemas ====================
 
 class ChapterBase(BaseModel):

@@ -182,6 +182,7 @@ export const BookEditPage: React.FC = () => {
   const [content, setContent] = useState<Descendant[]>(DEFAULT_CONTENT)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [visibility, setVisibility] = useState<'private' | 'public'>('private')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
@@ -211,6 +212,7 @@ export const BookEditPage: React.FC = () => {
     if (bookData) {
       setTitle(bookData.title)
       setDescription(bookData.description)
+      setVisibility(bookData.visibility)
       const bookChapters = bookData.chapters || []
       setChapters(bookChapters)
       
@@ -279,6 +281,7 @@ export const BookEditPage: React.FC = () => {
       const newBook = await bookApi.create({
         title: title || '未命名书籍',
         description,
+        visibility,
       })
       navigate(`/books/${newBook.id}`, { replace: true })
     } catch (error) {
@@ -291,9 +294,26 @@ export const BookEditPage: React.FC = () => {
     if (!book) return
     setSaving(true)
     try {
-      await updateBookMut.mutateAsync({ id: book.id, data: { title, description } })
+      await updateBookMut.mutateAsync({ id: book.id, data: { title, description, visibility } })
     } catch (error) {
       console.error('保存失败:', error)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // 切换公开/私密
+  const handleToggleVisibility = async () => {
+    if (!book) return
+    const newVisibility = visibility === 'public' ? 'private' : 'public'
+    setVisibility(newVisibility)
+    setSaving(true)
+    try {
+      await updateBookMut.mutateAsync({ id: book.id, data: { visibility: newVisibility } })
+      show(newVisibility === 'public' ? '书籍已设为公开' : '书籍已设为私密', 'success')
+    } catch (error) {
+      console.error('保存可见性失败:', error)
+      setVisibility(visibility)
     } finally {
       setSaving(false)
     }
@@ -507,6 +527,40 @@ export const BookEditPage: React.FC = () => {
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  可见性
+                </label>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setVisibility('private')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                      visibility === 'private'
+                        ? 'bg-slate-100 border-slate-300 text-slate-900'
+                        : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Lock className="w-4 h-4" />
+                    <span className="text-sm">私密</span>
+                  </button>
+                  <button
+                    onClick={() => setVisibility('public')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                      visibility === 'public'
+                        ? 'bg-amber-50 border-amber-200 text-amber-700'
+                        : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Globe className="w-4 h-4" />
+                    <span className="text-sm">公开</span>
+                  </button>
+                </div>
+                <p className="text-xs text-slate-400 mt-1.5">
+                  {visibility === 'public'
+                    ? '任何人都可以查看这本书的内容'
+                    : '只有你自己可以查看这本书'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -542,6 +596,19 @@ export const BookEditPage: React.FC = () => {
               <span className="text-slate-900 font-semibold truncate max-w-[120px]">{title || '未命名书籍'}</span>
             </div>
             <div className="flex items-center gap-1">
+              <button
+                onClick={handleToggleVisibility}
+                disabled={saving}
+                className={`p-1 rounded transition-colors disabled:opacity-50 ${
+                  visibility === 'public'
+                    ? 'text-amber-600 hover:bg-amber-100'
+                    : 'text-slate-500 hover:bg-slate-200'
+                }`}
+                title={visibility === 'public' ? '当前公开，点击设为私密' : '当前私密，点击设为公开'}
+                aria-label="切换可见性"
+              >
+                {visibility === 'public' ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+              </button>
               <button
                 disabled={importing}
                 onClick={() =>

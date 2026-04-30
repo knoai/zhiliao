@@ -6,7 +6,7 @@ from sqlalchemy import select, and_, func, desc, asc
 from sqlalchemy.orm import selectinload
 from fastapi import HTTPException, status
 
-from app.models import Book, Chapter
+from app.models import Book, Chapter, User
 from app.schemas import BookCreate, BookUpdate, ChapterCreate, ChapterUpdate
 
 
@@ -133,6 +133,113 @@ class BookService:
         await db.refresh(book)
         
         return book
+    
+    # ==================== Public Methods ====================
+    
+    @staticmethod
+    async def get_public_book_list(
+        db: AsyncSession,
+        keyword: Optional[str] = None
+    ) -> list[Book]:
+        """获取公开书籍列表"""
+        query = select(Book).where(Book.visibility == "public")
+        
+        if keyword:
+            query = query.where(
+                Book.title.ilike(f"%{keyword}%")
+            )
+        
+        query = query.order_by(desc(Book.updated_at))
+        
+        result = await db.execute(query)
+        return list(result.scalars().all())
+    
+    @staticmethod
+    async def get_public_book_by_id(db: AsyncSession, book_id: UUID) -> Optional[Book]:
+        """根据ID获取公开书籍"""
+        result = await db.execute(
+            select(Book).where(
+                and_(
+                    Book.id == book_id,
+                    Book.visibility == "public"
+                )
+            )
+        )
+        return result.scalar_one_or_none()
+    
+    @staticmethod
+    async def get_public_chapter_tree(db: AsyncSession, book_id: UUID) -> list[dict]:
+        """获取公开书籍的章节树"""
+        # 先验证书籍存在且公开
+        book = await BookService.get_public_book_by_id(db, book_id)
+        if not book:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="书籍不存在或未公开"
+            )
+        
+        # 复用现有章节树构建逻辑（无需 user_id 过滤）
+        result = await db.execute(
+            select(Chapter)
+            .where(Chapter.book_id == book_id)
+            .order_by(asc(Chapter.sort_order))
+        )
+        chapters = result.scalars().all()
+        
+        def chapter_to_dict(ch: Chapter) -> dict:
+            return {
+                "id": str(ch.id),
+                "book_id": str(ch.book_id),
+                "parent_id": str(ch.parent_id) if ch.parent_id else None,
+                "title": ch.title,
+                "path": ch.path,
+                "depth": ch.depth,
+                "sort_order": ch.sort_order,
+                "has_content": ch.content is not None and len(ch.content) > 0 if ch.content else False,
+                "children": [],
+                "created_at": ch.created_at,
+                "updated_at": ch.updated_at
+            }
+        
+        chapter_map = {str(ch.id): chapter_to_dict(ch) for ch in chapters}
+        root_chapters = []
+        
+        for ch in chapters:
+            ch_dict = chapter_map[str(ch.id)]
+            if ch.parent_id is None:
+                root_chapters.append(ch_dict)
+            else:
+                parent_id = str(ch.parent_id)
+                if parent_id in chapter_map:
+                    chapter_map[parent_id]["children"].append(ch_dict)
+        
+        return root_chapters
+    
+    @staticmethod
+    async def get_public_chapter(
+        db: AsyncSession,
+        book_id: UUID,
+        chapter_id: UUID
+    ) -> Optional[Chapter]:
+        """获取公开书籍的章节详情"""
+        # 先验证书籍公开
+        book = await BookService.get_public_book_by_id(db, book_id)
+        if not book:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="书籍不存在或未公开"
+            )
+        
+        # 查询章节
+        result = await db.execute(
+            select(Chapter).where(
+                and_(
+                    Chapter.id == chapter_id,
+                    Chapter.book_id == book_id
+                )
+            )
+        )
+        return result.scalar_one_or_none()
     
     @staticmethod
     async def delete_book(db: AsyncSession, user_id: UUID, book_id: UUID) -> None:

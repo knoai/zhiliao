@@ -161,3 +161,16 @@ export function countFiles(node: ImportFolderNode): number {
   if (node.type === 'file') return 1
   return node.children.reduce((sum, c) => sum + countFiles(c), 0)
 }
+
+/** 从文件列表获取根文件夹名称 */
+export function getRootFolderName(files: File[]): string {
+  if (files.length === 0) return '导入的书籍'
+  const path = (files[0] as any).webkitRelativePath || files[0].name
+  const parts = path.split('/')
+  // 如果有路径层级，取第一级作为根文件夹名
+  if (parts.length > 1) {
+    return parts[0]
+  }
+  // 否则（理论上不会触发 webkitdirectory），fallback
+  return '导入的书籍'
+}
