@@ -8,7 +8,8 @@ import {
   Globe,
   FileText,
   Edit3,
-  Sparkles
+  Sparkles,
+  List
 } from 'lucide-react'
 import { SlateEditor } from '../components/editor/SlateEditor'
 import { bookApi } from '../api/book'
@@ -161,6 +162,17 @@ export const PublicBookReadPage: React.FC = () => {
     }
   }
 
+  // 将章节树扁平化为索引列表
+  const flattenChapters = (list: ChapterTree[], result: { id: string; title: string; depth: number }[] = []) => {
+    for (const ch of list) {
+      result.push({ id: ch.id, title: ch.title || '未命名章节', depth: ch.depth })
+      if (ch.children) flattenChapters(ch.children, result)
+    }
+    return result
+  }
+
+  const chapterIndex = flattenChapters(chapters)
+
   const handleToggle = (chapterId: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev)
@@ -277,14 +289,14 @@ export const PublicBookReadPage: React.FC = () => {
             <>
               {/* Chapter Title */}
               <div className="border-b border-slate-100 bg-white">
-                <div className="px-8 py-4">
+                <div className="px-6 lg:px-12 py-4">
                   <h1 className="text-2xl font-bold text-slate-900">
                     {currentChapterTitle || '未命名章节'}
                   </h1>
                 </div>
               </div>
               {/* Slate Editor ReadOnly */}
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto px-6 lg:px-12 py-6">
                 <SlateEditor
                   value={content}
                   onChange={() => {}}
@@ -302,6 +314,37 @@ export const PublicBookReadPage: React.FC = () => {
             />
           )}
         </div>
+
+        {/* Right Floating Index */}
+        <aside className="hidden xl:flex w-56 border-l border-slate-200 bg-white flex-col">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-200">
+            <List className="w-4 h-4 text-slate-500" />
+            <span className="text-sm font-medium text-slate-700">索引</span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3">
+            {chapterIndex.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-4">暂无索引</p>
+            ) : (
+              <div className="space-y-1">
+                {chapterIndex.map((ch) => (
+                  <button
+                    key={ch.id}
+                    onClick={() => loadChapter(ch.id)}
+                    className={`w-full text-left text-xs rounded-md px-2 py-1.5 transition-colors ${
+                      currentChapterId === ch.id
+                        ? 'bg-amber-50 text-amber-700 font-medium'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                    style={{ paddingLeft: `${ch.depth * 12 + 8}px` }}
+                    title={ch.title}
+                  >
+                    <span className="truncate block">{ch.title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </aside>
       </div>
     </div>
   )
